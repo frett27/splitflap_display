@@ -1,7 +1,17 @@
 
+
+
+
+
 include <relativity.scad>
+include <28byj-48.scad>
 
-
+////////////////////////////////////////////////////////////
+//
+//  Parameters for the design
+//
+//
+////////////////////////////////////////////////////////////
 
 // pvc card dimensions
 
@@ -14,16 +24,15 @@ flip_fixure_diameter = 2;
 
 
 // radius for flip 
-// 
-diameter_flip = 40;
+diameter_flip = 42;
 // flip axis distance
-deport = 7;
+deport = 7.5;
 
 // distance between the flip holes and external
 margin_axe_external = 4;
 
 // motor distance link
-max_internal_radius = diameter_flip - 10;
+max_internal_radius = diameter_flip - 11;
 
 play = 0.5;
 
@@ -36,14 +45,18 @@ axe_external_diameter =
                 (diameter_flip +
                  margin_axe_external) * 2;
 
-// general animation parameters
+// internal centring
+patte_height = 2;
+
+// general animation angle parameters
 general_rotation_angle = 0;
 
 // drawing generation precision
 // uncomment this for generating STL,
 //
-//k$fa = 1;
-//$fs=0.3;
+$fa = 1;
+$fs=0.3;
+
 
 module flip(width=30) {
     
@@ -82,42 +95,86 @@ module axe() {
 }
 
 module axe_with_holes() {
-    
+  
     difference() {
        
-        axe();
+        union(){
+            
+          rotate([-90,0,0])
+          rotate_extrude(convexity = 10)
+          polygon(points = [
+            [ (max_internal_radius) ,
+               0],
+            [  (max_internal_radius) ,
+               3 * thick],
+            [  (max_internal_radius - 2 * thick) ,
+               3 * thick],
+            
+            [(max_internal_radius - 5 * thick) ,
+               0]
+          ]);
+          axe();
+            
+          // pattes   
+          
+          for(i = [0:3]) {
+              internal_radius = max_internal_radius;
+              element_width = 10;
+            
+              rotated([0,90 * i,0])
+              translate([0,element_width/2,-internal_radius])
+              rotate([90,0,0])
+              arc(rayon=internal_radius,
+                  height=patte_height,
+                  width=element_width, 
+                  angle_start=-9, 
+                  angle_end=9);
+
+          }
+            
+          // axis tube
+          
+          rotate([90,0,0])
+          translate([0,0,-thick])
+          cylinder(d = 28byj48_shaft_radius * 3, h = thick);
+            
+        };
+        
         // holes
         union() {
-                for( i = [0:5]) {
-                    rotate([0,i * 360/5 +
-                    general_rotation_angle,0])                    translate([12,thick,0]) 
+            
+                // internal
+                nb_internal = 6;
+                for( i = [0:nb_internal]) {
+                    rotate([0,i * 360/nb_internal +
+                    general_rotation_angle,0])                    translate([12,10*thick,0]) 
                     rotate([90,0,0]) 
-                    cylinder(d=10,h=2*thick);
+                    cylinder(d=8,h=20*thick);
                 };
             
                 for( i = [0:15]) {
                     rotate([0,i * 360/15 +
-                        general_rotation_angle,0])                    translate([24,thick,0])
+                        general_rotation_angle,0])                    translate([24,10*thick,0])
                     rotate([90,0,0])
-                    cylinder(d=7,h=2*thick);
+                    cylinder(d=7,h=20*thick);
                 };
         }
     }
     
-    orient([y])
-    translated(thick*z)
-    tube(d=(max_internal_radius) * 2 ,
-         h=thick,
-         perfo=(max_internal_radius - thick) * 2);
+   
+    
 
 }
 
-
+// function to place flips with angle and index
 module place_flip(index = 0, relative_angle = 0) {
      // second flip
     rotate([0, - index * angle_flip + general_rotation_angle ,0]) {
         translate([diameter_flip,flip_width/2 + thick,0]) {
-            rotate([0,-90 + relative_angle - general_rotation_angle,0]) {
+            rotate([0,
+                    -90 + relative_angle 
+                        - general_rotation_angle,
+                    0]) {
                 rotate([0,0,90]) {
            
                 flip(width= flip_width);
@@ -128,7 +185,7 @@ module place_flip(index = 0, relative_angle = 0) {
 }
 
 
-
+// place the flips around the 12 holes design
 module montage() {
     
     // one flip
@@ -152,6 +209,7 @@ module montage() {
    
 }
 
+// place the butee for the flip
 module butee() {
     butee_width = flip_width + 2 * thick;
     translated( (flip_width * z) + 
@@ -162,6 +220,7 @@ module butee() {
 }
 
 
+// show motor
 module motor() {
     differed("bords") {
         
@@ -179,8 +238,6 @@ module motor() {
     };
 }
 
-include <28byj-48.scad>
-
 // utility tube module
 module tube(d,h,perfo) {
     differed("trou","plein") {
@@ -190,9 +247,7 @@ module tube(d,h,perfo) {
 }
 
 
-
-
-module rosace(diameter=20, nbtrou=5) {
+module threecircles(diameter=20, nbtrou=5) {
     
     rod(d=diameter, h=thick);
     for(i = [0:360/nbtrou:360]) {
@@ -202,8 +257,9 @@ module rosace(diameter=20, nbtrou=5) {
     }
 }
 
-skrew_hole_size = 28byj48_mount_hole_radius * 2-2;
+skrew_hole_size = 28byj48_mount_hole_radius * 2-1;
 
+// stator module 
 module stator() {
     
         
@@ -214,15 +270,39 @@ module stator() {
      translated(28byj48_mount_center_offset * x - 28byj48_shaft_offset * z + 28byj48_mount_bracket_height *y )
         orient([y]) tube(d=fixing_base_radius, h = fixing_height, perfo = skrew_hole_size);
     
+    // renfort 1
+    strength_size= 6;
+    translated((28byj48_mount_center_offset + strength_size / 2 + 1) * x - 28byj48_shaft_offset * z + (28byj48_mount_bracket_height + fixing_height/2) *y ) 
+    box(size=[strength_size,fixing_height,strength_size]);
+    
+    translated((28byj48_mount_center_offset) * x - (28byj48_shaft_offset + strength_size / 2 + 1) * z + (28byj48_mount_bracket_height + fixing_height/2) *y ) 
+    box(size=[strength_size,fixing_height,strength_size]);
+    
+    translated((28byj48_mount_center_offset) * x - (28byj48_shaft_offset - strength_size / 2 - 1) * z + (28byj48_mount_bracket_height + fixing_height/2) *y ) 
+    box(size=[strength_size,fixing_height,strength_size]);
+    
+    
     
     // fixation 2
     
     mirror([x]) {
         translated(28byj48_mount_center_offset * x - 28byj48_shaft_offset * z + 28byj48_mount_bracket_height *y )
-        
         orient([y]) tube(d=fixing_base_radius, h = fixing_height, perfo = skrew_hole_size);
     
+         translated((28byj48_mount_center_offset + strength_size / 2 + 1) * x - 28byj48_shaft_offset * z + (28byj48_mount_bracket_height + fixing_height/2) *y ) 
+    box(size=[strength_size,fixing_height,strength_size]);
+    
+    translated((28byj48_mount_center_offset) * x - (28byj48_shaft_offset + strength_size / 2 + 1) * z + (28byj48_mount_bracket_height + fixing_height/2) *y ) 
+    box(size=[strength_size,fixing_height,strength_size]);
+    
+         translated((28byj48_mount_center_offset) * x - (28byj48_shaft_offset - strength_size / 2 - 1) * z + (28byj48_mount_bracket_height + fixing_height/2) *y ) 
+    box(size=[strength_size,fixing_height,strength_size]);
+    
     };
+    
+    
+    
+    
     
     
     height_renfort = fixing_height - 28byj48_chassis_height;
@@ -238,7 +318,7 @@ module stator() {
     height_difference = 20;
     translated(- (28byj48_shaft_offset - height_difference/2) * z
                + (fixing_height - height_renfort/2 + space/2)   * y)
-    box(size= [3,
+    box(size= [5,
                height_renfort - space,
                20 + height_difference]);
     
@@ -250,35 +330,15 @@ module stator() {
         orient([y])
         {
             rotate([0,0,30])
-            rosace(diameter=max_internal_radius, nbtrou=3);
+            threecircles(diameter=max_internal_radius, nbtrou=3);
         };
-            
-       /*     
-        hull() {
-            translated(28byj48_mount_center_offset * x 
-                       - 28byj48_shaft_offset * z +
-                       28byj48_mount_bracket_height *y)
-                
-            orient([y]) 
-            rod(d=fixing_base_radius * 2, 
-                h=thick);
-                
-            translated(- 28byj48_mount_center_offset * x 
-                       - 28byj48_shaft_offset * z 
-                       + 28byj48_mount_bracket_height *y)
-                
-            orient([y]) 
-            rod(d=fixing_base_radius * 2,
-                h=thick);
-            
-           
-        }*/
     }
     
 }
 
 module stator_with_holding_hole() {
-     fixing_height = 28byj48_chassis_height + (flip_width - 28byj48_chassis_height) - 28byj48_shaft_height + 28byj48_shaft_slotted_height / 2;
+    
+    fixing_height = 28byj48_chassis_height + (flip_width - 28byj48_chassis_height) - 28byj48_shaft_height + 28byj48_shaft_slotted_height / 2;
     
     differed("hole") {
         stator();
@@ -288,6 +348,14 @@ module stator_with_holding_hole() {
         rotate([0,90 + 45,0])
         translated( - 4 * z )
         box(size=[3,1000,500], anchor=[1,0,1], $class="hole");
+        
+         
+        // central hole
+        translated(
+                    + fixing_height * y)
+        orient([y])
+        rod( d=11, h=8, $class="hole");
+        
         
         // back hole
         translated( - 28byj48_shaft_offset * z
@@ -322,9 +390,44 @@ module second_axe() {
     }
 }
 
+module arc(rayon,height,width,angle_start, angle_end) {
+    
+    center = [ 0, rayon ];
+    _max = angle_end;
+    _min =angle_start;
+    poly_points = [ for(i = [_min:_max]) 
+       rayon * [ cos(i + 270),sin(i + 270) ] + center 
+    ];
+
+    o = [ (rayon - height) * [ cos(_max + 270),sin(_max + 270) ] + center ];
+
+    o2 = [ for(i = [_max:-1:_min]) 
+       (rayon - height) * [ cos(i + 270),sin(i + 270) ] + center 
+    ];
+    
+    linear_extrude(height = width, center = true, twist = 0) 
+    polygon(points = concat(poly_points, o, o2));
+}
+
+module patte() {
+    
+    
+    internal_radius = (max_internal_radius + play);
+    element_width = 10;
+    translate([0,element_width/2,-internal_radius])
+    rotate([90,0,0])
+    arc(rayon=internal_radius,height=patte_height,width=element_width, angle_start=10, angle_end=30);
+
+    translate([0,element_width/2,-internal_radius])
+    rotate([90,0,0])
+    arc(rayon=internal_radius,height=patte_height,width=element_width, angle_start=-30, angle_end=-10);
+}
+
+
 module rotor() {
 
     racc = 2;
+    
     orient([y]) {
     tube(d=(max_internal_radius + thick) * 2,
          h=(flip_width + play + 2 *thick),
@@ -336,7 +439,7 @@ module rotor() {
     differed("hole") {
         second_axe();
         
-        
+        // chamfrein
         hull() {
         orient([y]) {
             translated(  (flip_width + 2*thick - racc) * z )
@@ -358,6 +461,14 @@ module rotor() {
            $class="hole");
         }
     }
+    
+    // positionning elements inside
+    for (i = [0:3]) {
+        rotate([0, i * 90, 0])
+        translate([0,6,0])
+        patte();
+    }
+
 }
 
 module axe_with_fix() {
@@ -374,6 +485,7 @@ module axe_with_fix() {
 /////////////////////////////////////////////////////
 // external box
 
+// function for creating an empty box,
 module empty_box(width, depth, height, ethick, play) {
     
     translate([-depth/2 - play,-ethick - play, -height/2 - play])
@@ -383,10 +495,15 @@ module empty_box(width, depth, height, ethick, play) {
                      width+2*thick + 2*play,
                      height + 2*ethick + 2*play]);
         
-        cube(size = [depth+ 2*play, width+ 2*play, height+ 2*play]);
+        cube(size = [depth+ 2*play, 
+                     width+ 2*play, 
+                     height+ 2*play]);
     }
 }
 
+//
+// external container of the flip box
+//
 module external_box() {
     
     // back depth margin
@@ -401,6 +518,7 @@ module external_box() {
     window_height = 2 * flip_height;
     butee_size = 5;
     
+    // window for the digits
     echo("depth=",depth,"width=", width,"height=", height);
     difference() {
         translate([(- back_margin)/2,
@@ -420,7 +538,165 @@ module external_box() {
                     - deport - butee_size]) 
         cube([1000,width,window_height]);
     }
+    
+    // Electronic box
+    ebox_height = 30;
+    ebox_depth = 40;
+    translate([back_margin - depth /2 - ebox_depth/2   ,
+               width/2, 
+                -depth +  ebox_height/2 + flip_height/2 ])
+    box(size=[ebox_depth,width , ebox_height]);
+    
 }
+
+/////////////////////////////////////////////////////
+
+// card fixture
+fixture_height = 5;
+
+
+module fixture() {
+    cylinder(d = flip_fixure_diameter, h = 2);
+    translate([-0.5,0,-1.5])
+    box(size=[1,fixture_height,3]);
+}
+
+fixture_connector_size = 0.2;
+module fixture_with_connect() {
+    fixture();
+    
+    translate([-fixture_connector_size,fixture_height / 2,-fixture_connector_size])
+    
+    box(size=[fixture_connector_size,2*fixture_height,fixture_connector_size]);
+    
+    translate([-fixture_connector_size,0,fixture_height / 2 + 2])
+    box(size=[fixture_connector_size,fixture_connector_size,fixture_height]);
+    
+    
+}
+// fixture_with_connect() ;
+
+module multiple_fixture_connected() {
+
+   for (j= [0:5]) {
+       for(i = [0:6]){
+           translate([0,i* (fixture_height + fixture_height), j* (fixture_height + fixture_height)])
+           fixture_with_connect();
+           
+       }
+   }
+    
+}
+
+// multiple_fixture_connected();
+
+///////////////////////////////////////////////////////
+//
+// Mounting card facilities
+//
+//
+
+
+
+    mount_height = 1;
+    mount_depth = flip_height;
+    
+    butee = 2;
+    separate_butee = 0.4;
+    mount_card_play = 0.4;
+    mount_width = flip_width + 2 * butee + mount_card_play;
+
+   
+ 
+module mounting_fixture_butee() {
+    
+     
+    difference() {
+        // traversial
+        translate([-mount_width/2 + butee/2,
+                  -mount_depth/2,
+                  0])
+        box(size=[butee,mount_depth,2*mount_height]);
+        union() {
+            // cute the elements for the card support
+         
+            translate([-mount_width/2 + butee ,
+                  - deport + mount_card_play / 2,
+                  0])
+            box(size=[2 * butee, 
+                    flip_fixure_diameter + mount_card_play, 
+                    5 * mount_height]);
+        }
+    }
+   
+}
+
+module _mounting_general_support() {
+    
+    translate([0,-mount_depth/2,- mount_height/2])
+    box(size=[mount_width - 2 * butee,
+              mount_depth,mount_height]);
+    
+    mounting_fixture_butee();
+    mirror([y]) {
+      mounting_fixture_butee();
+    }
+    
+    translate([0,separate_butee/2, 0])
+    union() {
+        box(size=[mount_width,
+                  separate_butee,
+                  2 * mount_height]);
+        
+    }
+    
+}
+
+module mounting_fixture() {
+    
+    difference() {
+        union() {
+                _mounting_general_support();
+        }
+        union() {
+            
+            translate([-(flip_width + mount_card_play)/2,-deport,0.1])
+            rotate([0,-90,0])
+            scale([1.03,1.03,1.03])
+            fixture();
+            
+            mirror([y]) {
+                translate([-(flip_width + mount_card_play)/2,-deport,0.1])
+                rotate([0,-90,0])
+                scale([1.02,1.02,1.02])
+                fixture();
+                
+            }
+        }
+    }
+    
+    rotate([0,0,180]) {
+        _mounting_general_support();
+        
+    }
+        
+}
+
+
+module mounting_fixture_with_label() {
+    difference() {
+        mounting_fixture();        
+        translate([-18,10,-0.2])        
+        linear_extrude(height = 3) {
+            text("flip flap card support", size=3);
+        }        
+    }
+}
+
+mounting_fixture_with_label();
+
+
+
 
 
 /////////////////////////////////////////////////////
@@ -444,6 +720,8 @@ module all() {
      color("blue") {
         rotor();
      }
+     
+     external_box();
     
 }
 
@@ -464,13 +742,13 @@ difference() {
 /*
 difference() {
 
- all();
+  all();
   
- translate([0,25,0]) cube(size=[50,500,500]);
-
+   translate([-250,25,-250]) cube(size=[500,500,500]);
+  //translate([-250,-500 + 25,-250]) cube(size=[500,500,500]);
 }    
-*/
 
+*/
  
  
 /*
@@ -483,4 +761,11 @@ difference() {
     }
 */
 
-rotor();
+//all();
+
+/////////////////////////////////////////
+// details of every parts
+
+//rotor();
+//stator_with_holding_hole();
+//axe_with_fix();
