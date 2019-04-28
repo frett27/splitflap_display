@@ -1,18 +1,40 @@
 # Electronic Card
 
+*Patrice Freydiere - 2019*
+
+The electronic is module specific, but can be connected with others modules to create a variable length number.
+
+![](electronic/connecting_schema.png)
+
+Every modules have a in-connector and out-connector. They transmit information upward and backward using a serial communication.
+
+Inside the module, the main controller, is connected to the stepper motor driver, and the out-connector.
 
 
-slot for connecting to an other digit module
+
+Basic schema of the electronic elements associated to modules :
 
 
 
-leonardo - uno : can be powered on 12v
-
-the first module is powered with 12v
+![](electronic/connector.png)
 
 
 
-### Connector
+## Electronic Schema
+
+
+
+The schema is as follow :
+
+
+
+![](electronic/schematic.png)
+
+
+
+
+
+### Connector pins
 
 
 
@@ -40,7 +62,7 @@ on the other side / symetric
 
 
 
-### The logic :
+### The electronic software :
 
 at reset we send a transmission to count the number of digits, when done
 
