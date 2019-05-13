@@ -5,11 +5,11 @@
 
 include <relativity.scad>
 include <28byj-48.scad>
+include <switch.scad>
 
 ////////////////////////////////////////////////////////////
 //
 //  Parameters for the design
-//
 //
 ////////////////////////////////////////////////////////////
 
@@ -34,7 +34,8 @@ margin_axe_external = 4;
 // motor distance link
 max_internal_radius = diameter_flip - 11;
 
-play = 0.5;
+// play for letting the elements move
+play = 0.2;
 
 
 /////////////////////////////////
@@ -47,6 +48,8 @@ axe_external_diameter =
 
 // internal centring
 patte_height = 2;
+
+fixing_height = 28byj48_chassis_height + (flip_width - 28byj48_chassis_height) - 28byj48_shaft_height + 28byj48_shaft_slotted_height / 2;
 
 // general animation angle parameters
 general_rotation_angle = 0;
@@ -264,7 +267,7 @@ module stator() {
     
         
     fixing_base_radius = 28byj48_mount_hole_radius * 2 + thick;
-    fixing_height = 28byj48_chassis_height + (flip_width - 28byj48_chassis_height) - 28byj48_shaft_height + 28byj48_shaft_slotted_height / 2;
+ 
     
     // fixation 1
      translated(28byj48_mount_center_offset * x - 28byj48_shaft_offset * z + 28byj48_mount_bracket_height *y )
@@ -301,10 +304,6 @@ module stator() {
     };
     
     
-    
-    
-    
-    
     height_renfort = fixing_height - 28byj48_chassis_height;
     space = 5;
     translated(- 28byj48_shaft_offset * z
@@ -315,14 +314,20 @@ module stator() {
     
     // strong piece
     // height strong difference height
-    height_difference = 20;
-    translated(- (28byj48_shaft_offset - height_difference/2) * z
-               + (fixing_height - height_renfort/2 + space/2)   * y)
-    box(size= [5,
-               height_renfort - space,
-               20 + height_difference]);
-    
-    
+
+        height_difference = 20;
+        translated(- (28byj48_shaft_offset - height_difference/2 -1 ) * z
+                   + (fixing_height - height_renfort/2 + space/2)   * y + 
+                   5 * x)
+        box(size= [6,
+                   height_renfort - space,
+                   26 + height_difference]);
+        translated(- (28byj48_shaft_offset - height_difference/2 ) * z
+                   + (fixing_height - height_renfort/2 + space/2)   * y + 
+                   - 6 * x)
+        box(size= [6,
+                   height_renfort - space,
+                   26 + height_difference]);
     
     // back support
     translated((28byj48_mount_bracket_height + fixing_height) *y ) {
@@ -338,16 +343,46 @@ module stator() {
 
 module stator_with_holding_hole() {
     
-    fixing_height = 28byj48_chassis_height + (flip_width - 28byj48_chassis_height) - 28byj48_shaft_height + 28byj48_shaft_slotted_height / 2;
+    difference() {
+        _stator_with_holding_hole();
+        
+        // body of switch
+        union() {
+            switch_placement();            
+            switch_space();
+        }
+    }
+    
+    
+}
+
+
+
+module _stator_with_holding_hole() {
+    
+    
     
     differed("hole") {
         stator();
         
         // cable pass
-        translated( - 28byj48_shaft_offset * z)
+        height_renfort = fixing_height - 28byj48_chassis_height;
+        space = 5;
+        
+        translated( - 28byj48_shaft_offset * z
+         + (fixing_height - height_renfort/2 + space/2)   * y 
+        )
         rotate([0,90 + 45,0])
-        translated( - 4 * z )
-        box(size=[3,1000,500], anchor=[1,0,1], $class="hole");
+        translated( - 4 * z + 10*y)
+        box(size=[2,10,500], anchor=[1,0,1], $class="hole");
+        
+        translated( - 28byj48_shaft_offset * z
+         + (fixing_height - height_renfort/2 + space/2)   * y 
+        )
+        rotate([0,180 + 45,0])
+        translated( - 4 * z + 10*y)
+        box(size=[2,10,500], anchor=[1,0,1], $class="hole");
+        
         
          
         // central hole
@@ -376,6 +411,7 @@ module stator_with_holding_hole() {
                 + fixing_height * y)
         orient([y])
         rod( d=skrew_hole_size, h=10, $class="hole");
+        
         
         
     }
@@ -409,18 +445,52 @@ module arc(rayon,height,width,angle_start, angle_end) {
     polygon(points = concat(poly_points, o, o2));
 }
 
-module patte() {
-    
-    
+module demi_patte(angle, patte_heigth=patte_height) {
+     
     internal_radius = (max_internal_radius + play);
+    
     element_width = 10;
     translate([0,element_width/2,-internal_radius])
     rotate([90,0,0])
-    arc(rayon=internal_radius,height=patte_height,width=element_width, angle_start=10, angle_end=30);
+    arc(rayon=internal_radius,height=patte_height,width=element_width, angle_start=angle, angle_end=angle + 20);
 
+    
+}
+
+
+module arc_ramp(rayon,height,width,angle_start, angle_end) {
+
+    center = [ 0, rayon ];
+    _max = angle_end;
+    _min =angle_start;
+   
+    poly_points = [ for(i = [_min:_max]) 
+       rayon * [ cos(i + 270),sin(i + 270) ] + center 
+    ];
+    o2 = [ for(i = [_max - ( (_max-_min) /5):-0.3: _min ]) 
+       (rayon - height) * [ cos(i + 270),sin(i + 270) ] + center 
+    ];
+    
+    linear_extrude(height = width, center = true, twist = 0) 
+    polygon(points = concat(poly_points, o2));
+
+}
+
+module homing_pos(angle, patte_heigth=patte_height) {
+     
+    internal_radius = (max_internal_radius + play);
+    
+    element_width = 10;
     translate([0,element_width/2,-internal_radius])
     rotate([90,0,0])
-    arc(rayon=internal_radius,height=patte_height,width=element_width, angle_start=-30, angle_end=-10);
+    arc_ramp(rayon=internal_radius,height=patte_height,width=element_width, angle_start=angle, angle_end=angle + 40);
+
+    
+}
+
+module patte() {
+    demi_patte(10);
+    demi_patte(-30);
 }
 
 
@@ -468,6 +538,11 @@ module rotor() {
         translate([0,6,0])
         patte();
     }
+    
+     // patte
+    translate([0,fixing_height - 24])
+    homing_pos(angle=-120, patte_height = 3);
+
 
 }
 
@@ -693,7 +768,6 @@ module mounting_fixture_with_label() {
     }
 }
 
-mounting_fixture_with_label();
 
 
 
@@ -724,9 +798,56 @@ module all() {
      external_box();
     
 }
+/////////////////////////////////////////////
+// switch 
+
+module switch_position() 
+{
+    translate([-6, fixing_height - 14,-5])
+    rotate([0,-40,0])
+    
+    rotate([90,0,0])
+    
+    
+    switch(angle=switch_angle1, drawboth = 1);
+    
+}
+
+module switch_space() {
+     
+    // place switch
+    // todo, refactor
+
+    l = switch_width/2;
+    h = switch_height + 7;
+    
+    translate([-4, fixing_height - 14,-8])
+    rotate([0,-40,0])
+    rotate([90,0,0])
+    translate([l,h/2,switch_deep/2])
+    scale([1.01,1.01,1.01])
+    box(size=[l, h, switch_deep]);
+    
+}
+
+module switch_placement() {
+    
+    // place switch
+    // todo, refactor
+
+    translate([-6, fixing_height - 14,-5])
+    rotate([0,-40,0])
+    
+    rotate([90,0,0])
+    
+    translate([switch_width/2,switch_height/2,switch_deep/2])
+    scale([1.01,1.01,1.01])
+    switch_body_centered(angle=switch_angle1, drawboth = 1);
+    
+}
+
 
 /////////////////////////////////////////////
-
 /*
 difference() {
     
@@ -747,8 +868,8 @@ difference() {
    translate([-250,25,-250]) cube(size=[500,500,500]);
   //translate([-250,-500 + 25,-250]) cube(size=[500,500,500]);
 }    
-
 */
+
  
  
 /*
@@ -766,6 +887,11 @@ difference() {
 /////////////////////////////////////////
 // details of every parts
 
-//rotor();
-//stator_with_holding_hole();
-//axe_with_fix();
+// mounting_fixture_with_label();
+
+rotate([0,90,0])
+rotor();
+stator_with_holding_hole();
+
+switch_position();
+// axe_with_fix();

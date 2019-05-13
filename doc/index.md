@@ -1,8 +1,10 @@
 # Flip Flap - Digit - module (FLIP-1)
 
+*Patrice Freydiere - 2019-04*
 
 
-This module display a digit, using an energy minimum approach
+
+This module display a digit, using an energy minimum approach. 
 
 ![](coupe_module.png)
 
@@ -29,13 +31,15 @@ The module has the following dimensions currently, using a PVC card as reference
 
 
 
-| Reference        | Qty  | Description                    |      |
-| ---------------- | ---- | ------------------------------ | ---- |
-| FLIP-1-3D1       | 1    | Stator                         |      |
-| FLIP-1-3D2       | 1    | Rotor - 1                      |      |
-| FLIP-1-3D3       | 1    | Rotor - 2                      |      |
-| FLIP-1-CARDS     | 6    | Flip cards (6 * 2) half cards  |      |
-| FLIP-1-MOTOR_CMD | 1    | 28byj-48 - module with command |      |
+| Reference        | Qty  | Description                                 | Cost |
+| ---------------- | ---- | ------------------------------------------- | ---- |
+| FLIP-1-3D1       | 1    | Stator                                      | 2    |
+| FLIP-1-3D2       | 1    | Rotor - 1                                   | 2    |
+| FLIP-1-3D3       | 1    | Rotor - 2                                   | 2    |
+| FLIP-1-CARDS     | 6    | Flip cards (6 * 2) half cards               | 10   |
+| FLIP-1-MOTOR_CMD | 1    | 28byj-48 - module with command card (LN218) | 4    |
+
+<u>Currently in tests:</u>
 
 
 
@@ -49,20 +53,22 @@ Vinyl letters :
 
 ## 3D model
 
+Model is build with OpenScad, permitting to create parametric models, this is really usefull for optimization and alternatives.
+
 
 
 ## Electronic
 
-Electronic card is composed of a leonardo microchip, 
-
-this chip handle the motor, zero and communication with all other display
+Electronic card is composed of a leonardo microchip, this chip handle the motor, homing, and communication. And external USB connected unit gives the numbers to display.
 
 
 
+a lonely electronic card is hosted in the display.
 
-
-
+![](electronic/ci.png)
 
 
 
 ## How to mount flip display
+
+@@@ TODO
