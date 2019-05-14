@@ -485,7 +485,25 @@ module homing_pos(angle, patte_heigth=patte_height) {
     rotate([90,0,0])
     arc_ramp(rayon=internal_radius,height=patte_height,width=element_width, angle_start=angle, angle_end=angle + 40);
 
+    homing_pos_ramp(angle, offset=element_width,patte_height = patte_height);
     
+}
+
+module homing_pos_ramp(angle, offset=0, width = 10, patte_heigth=patte_height) {
+     
+    internal_radius = (max_internal_radius + play);
+    
+    element_width = 10;
+    step = 0.25;
+    for (i = [0:step:width]) {
+        translate([0,offset + i,-internal_radius])
+        rotate([90,0,0])
+        arc_ramp(rayon=internal_radius,
+                 height=patte_height/width * (width - i),
+                 width= step,
+                 angle_start=angle, 
+                 angle_end=angle + 40);
+    }
 }
 
 module patte() {
@@ -889,9 +907,9 @@ difference() {
 
 // mounting_fixture_with_label();
 
-rotate([0,90,0])
-rotor();
+//rotate([0,90,0])
+//rotor();
 stator_with_holding_hole();
 
-switch_position();
+//switch_position();
 // axe_with_fix();
