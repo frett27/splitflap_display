@@ -341,20 +341,6 @@ module stator() {
     
 }
 
-module stator_with_holding_hole() {
-    
-    difference() {
-        _stator_with_holding_hole();
-        
-        // body of switch
-        union() {
-            switch_placement();            
-            switch_space();
-        }
-    }
-    
-    
-}
 
 
 
@@ -417,6 +403,26 @@ module _stator_with_holding_hole() {
     }
     
 }
+
+module stator_with_holding_hole() {
+    
+    difference() {
+        _stator_with_holding_hole();
+        
+        // body of switch
+        
+        union() {
+            switch_placement();
+            // space for connectors
+            switch_space();
+        }
+        
+    }
+    
+    
+}
+
+///////////////////////////////////////////////////////
 
 
 module second_axe() {
@@ -753,13 +759,17 @@ module mounting_fixture() {
         }
         union() {
             
-            translate([-(flip_width + mount_card_play)/2,-deport,0.1])
+            translate([-(flip_width + mount_card_play)/2,
+                       -deport,
+                       0.1])
             rotate([0,-90,0])
             scale([1.03,1.03,1.03])
             fixture();
             
             mirror([y]) {
-                translate([-(flip_width + mount_card_play)/2,-deport,0.1])
+                translate([-(flip_width + mount_card_play)/2,
+                           -deport,
+                            0.1])
                 rotate([0,-90,0])
                 scale([1.02,1.02,1.02])
                 fixture();
@@ -791,31 +801,6 @@ module mounting_fixture_with_label() {
 
 
 
-/////////////////////////////////////////////////////
-// General module
-
-module all() {
- 
-    axe_with_fix();
-   
-    color("white") {
-        montage();
-    }
-    translate([0,28byj48_shaft_height - 28byj48_shaft_slotted_height / 2,0 ]) { 
-        rotate ([90,0,0]) Stepper28BYJ48();
-        color("red") {
-            stator_with_holding_hole();
-        }
-    
-    }
-   
-     color("blue") {
-        rotor();
-     }
-     
-     external_box();
-    
-}
 /////////////////////////////////////////////
 // switch 
 
@@ -865,6 +850,33 @@ module switch_placement() {
 }
 
 
+/////////////////////////////////////////////////////
+// General module
+
+module all() {
+ 
+    axe_with_fix();
+   
+    color("white") {
+        montage();
+    }
+    translate([0,28byj48_shaft_height - 28byj48_shaft_slotted_height / 2,0 ]) { 
+        rotate ([90,0,0]) Stepper28BYJ48();
+        color("red") {
+            stator_with_holding_hole();
+        }
+    
+    }
+   
+     color("blue") {
+        rotor();
+     }
+     
+     external_box();
+    
+}
+
+
 /////////////////////////////////////////////
 /*
 difference() {
@@ -908,8 +920,8 @@ difference() {
 // mounting_fixture_with_label();
 
 //rotate([0,90,0])
-//rotor();
-stator_with_holding_hole();
+rotor();
+//stator_with_holding_hole();
 
 //switch_position();
 // axe_with_fix();
