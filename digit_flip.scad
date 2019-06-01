@@ -20,8 +20,9 @@ flip_height = 86.2 / 2;
 
 nbtrou = 12;
 thick = 1.5;
-flip_fixure_diameter = 2;
 
+flip_fixure_diameter = 2;
+flip_fixure_diameter_play = 1; //radius
 
 // radius for flip 
 diameter_flip = 42;
@@ -83,9 +84,10 @@ module flip(width=30) {
 module axe() {
     
      rotate([0,general_rotation_angle,0]) {
-            
+            translated(thick/2 * y)
             orient([y])
             differed("hole")
+            
             rod(d=axe_external_diameter ,h=thick)
             
             for (i = [0: nbtrou]) {
@@ -93,7 +95,7 @@ module axe() {
                 rotated(angle_flip*i*z)
                 translated(diameter_flip  *x)
                 rod(d=flip_fixure_diameter 
-                       + 2*play,h=10, $class="hole");
+                       + flip_fixure_diameter_play,h=10, $class="hole");
             }
         };
 }
@@ -426,12 +428,6 @@ module stator_with_holding_hole() {
 ///////////////////////////////////////////////////////
 
 
-module second_axe() {
-  
-    translate([0, flip_width + 2*thick,0]) {
-        axe();
-    }
-}
 
 module arc(rayon,height,width,angle_start, angle_end) {
     
@@ -523,38 +519,47 @@ module rotor() {
 
     racc = 2;
     
+    tube_height = (flip_width + play + thick);
+    
     orient([y]) {
     tube(d=(max_internal_radius + thick) * 2,
-         h=(flip_width + play + 2 *thick),
+         h=tube_height,
          perfo=2 * max_internal_radius + 2 * play); 
     }
     
    
     
     differed("hole") {
-        second_axe();
         
-        // chamfrein
+        translate([0, tube_height - thick,0]) {
+            // reference of axe is 
+            axe();
+        }
+        
+        
+        // hardening tube / end
         hull() {
         orient([y]) {
-            translated(  (flip_width + 2*thick - racc) * z )
+            translated(  (tube_height - thick - racc) * z )
             tube(d=(max_internal_radius + thick) * 2,
                  h=0.1,
                  perfo=2 * max_internal_radius + 2 * play); 
             
-            translated(  (flip_width + 2*thick) * z )
+            translated(  (tube_height -thick ) * z )
             tube(d=(max_internal_radius + thick + racc) * 2,
                  h=0.1,
                  perfo=2 * max_internal_radius + 2 * play); 
             }
         }
         
+        
         orient([y])
-        translated( (flip_width + 2*thick) * z) {
-        rod(d = (max_internal_radius + thick) * 2,
+        translated( (tube_height - play) * z) {
+        rod(d = (max_internal_radius + play) * 2,
            h = 30,
            $class="hole");
         }
+        
     }
     
     // positionning elements inside
@@ -575,7 +580,10 @@ module axe_with_fix() {
     difference() {
         axe_with_holes();
         
-        translate([0,28byj48_shaft_height - 28byj48_shaft_slotted_height / 2,0 ]) { 
+        translate([0,
+                   28byj48_shaft_height 
+                      - 28byj48_shaft_slotted_height / 2,
+                   0 ]) { 
             rotate ([90,0,0]) Stepper28BYJ48();
         }
     }
@@ -913,7 +921,7 @@ difference() {
     }
 */
 
-all();
+//all();
 
 /////////////////////////////////////////
 // details of every parts
@@ -921,8 +929,9 @@ all();
 // mounting_fixture_with_label();
 
 //rotate([0,90,0])
-rotor();
-stator_with_holding_hole();
+
+//rotor();
+//stator_with_holding_hole();
 
 //switch_position();
 axe_with_fix();

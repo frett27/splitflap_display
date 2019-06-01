@@ -30,6 +30,7 @@ for more information, go to doc/ folder
 - [x] Electronic Schematic
 - [x] Card Mounting
 - [ ] Software
+- [ ] Structure for fix
 
 
 
@@ -38,5 +39,8 @@ Planned elements for V2
 3D Design
 
 - [ ] Thick enlrge for switch
+
 - [ ] Redesign card fixtures
-- [ ] Add switch on electronic Card
+
+- [ ] Add switch on electronic Card & Pullup
+
