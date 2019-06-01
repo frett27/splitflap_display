@@ -1,0 +1,243 @@
+/* CSS Document */
+
+div#ContentBody h1 {
+    float: left;
+    display: block;
+    width: 1200px;
+    text-align: center;
+    color: rgb(189, 65, 65);
+    text-shadow: #ddd 1px 1px 1px;
+    text-decoration: none;
+    font-size: 25px;
+    font-family: 'Trebuchet MS', 'Lucida Grande', arial, helvetica, sans-serif;
+}
+
+
+
+
+
+div#ContentBody div.PostMeta{
+float:left;
+display:block;
+width:1176px;
+border-bottom:1px solid #CCCCCC;
+margin:0px 0px 0px 0px;
+padding:0px 12px 3px 12px;
+color: #9e9e9e;
+font-size:12px;
+}
+
+
+div#ContentBody div.PostMeta span.Time{
+margin-right:20px;
+}
+
+div#ContentBody div.PostMeta a.category{
+margin-left:2px;
+color:#000000;
+text-decoration:underline;
+padding:0px 5px 0px 5px;
+}
+
+div#ContentBody div.PostMeta a.category:hover{
+color:#990000;
+}
+
+div#ContentBody div.PostContent {
+    background:#E7E7E7;
+    float: left;
+    display: block;
+    width: 1176px;
+    margin: 2px;
+    padding: 0px 10px 0px 10px;
+	min-height:700px;
+}
+div#ContentBody div.PostContent a{
+color: rgb(255, 17, 17);
+text-decoration:none;
+}
+
+
+div#ContentBody div.PostContent a:hover{
+color:#FF0000;
+text-decoration:underline;
+}
+
+
+div#ContentBody table, th, td {
+border: 1px solid green;
+margin: 0;
+padding: 0;
+}
+div#ContentBody table{
+border-collapse: collapse;
+border-spacing: 0;
+border-collapse: collapse;
+border-width: 2px;
+margin: 0;
+padding: 0;
+}
+
+
+/*AmCustomFields*/
+div#AmCustomFields{
+float: left;
+display: block;
+background: #E0E6E9;
+width: 1200px;
+font-size: 12px;
+}
+
+div#AmCustomFields p.Line{
+float: left;
+display: block;
+margin: 0px 0px 2px 0px;
+padding: 1px 0px 1px 0px;
+width: 1240px;
+background: #E6EAEA;
+}
+div#AmCustomFields p.Line span{
+float:left;
+display:block;
+}
+
+
+
+div#AmCustomFields p.Line span.Title_post_array{
+margin: 0px 0px 0px 2px;
+padding: 2px 0px 2px 20px;
+background:#fcfcfc;
+color: #262424;
+width:1220px;
+}
+
+div#AmCustomFields p.Line a.Value_post_array{
+float: left;
+display: block;
+margin: 1px 0px 1px 2px;
+padding: 2px 0px 2px 30px;
+background: #fbfbfb;
+color: #262424;
+width: 1210px;
+font-size:12px;
+}
+div#AmCustomFields p.Line a.Value_post_array:before{
+content:"*";
+}
+
+
+
+div#AmCustomFields p.Line span.TitleCommon{
+margin: 0px 0px 0px 2px;
+padding: 3px 0px 3px 20px;
+background:#d4d1d1;
+color: #262424;
+width: 200px;
+}
+div#AmCustomFields p.Line span.TitleCommon:after{
+content:":";
+}
+div#AmCustomFields p.Line span.ValueCommon{
+margin:0px 0px 0px 2px;
+padding:3px 0px 3px 15px;
+background: #fbfbfb;
+color: #262424;
+width:1000px;
+}
+
+div#AmCustomFields p.Line a.ValueUrl{
+float:left;
+display:block;
+margin:0px 0px 0px 2px;
+padding:3px 0px 3px 15px;
+background: #fbfbfb;
+color: #262424;
+width:1000px;
+}
+
+div#AmCustomFields p.Line a.ValueUrl:hover{
+
+}
+
+
+
+
+
+div#AmCustomFields p.Line span.arr_post{
+float:left;
+display:block;
+background:#CCCCCC;
+width:195px;
+margin:2px 2px 2px 2px;
+border-bottom:1px solid #ffffff;
+}
+div#AmCustomFields p.Line span.arr_post:hover{
+border-bottom:1px solid #756a6a;
+}
+
+div#AmCustomFields p.Line span.arr_post img{
+float:left;
+display:block;
+width:200px;
+height:200px;
+padding:0;
+margin:0;
+}
+
+
+div#AmCustomFields p.Line span.arr_post a.Value_post_array{
+float:left;
+display:block;
+width:196px;
+height:55px;
+padding:0;
+margin:0;
+margin-top:1px;
+padding:2px 2px 2px 2px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -24,7 +24,7 @@ for more information, go to doc/ folder
 
 
 
-# Project State
+# Project State - V1
 
 - [x] 3D Print - V1 
 - [x] Electronic Schematic
@@ -33,3 +33,10 @@ for more information, go to doc/ folder
 
 
 
+Planned elements for V2
+
+3D Design
+
+- [ ] Thick enlrge for switch
+- [ ] Redesign card fixtures
+- [ ] Add switch on electronic Card

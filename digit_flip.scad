@@ -57,8 +57,9 @@ general_rotation_angle = 0;
 // drawing generation precision
 // uncomment this for generating STL,
 //
-$fa = 1;
-$fs=0.3;
+
+//$fa = 1;
+//$fs=0.3;
 
 
 module flip(width=30) {
@@ -912,7 +913,7 @@ difference() {
     }
 */
 
-//all();
+all();
 
 /////////////////////////////////////////
 // details of every parts
@@ -921,7 +922,7 @@ difference() {
 
 //rotate([0,90,0])
 rotor();
-//stator_with_holding_hole();
+stator_with_holding_hole();
 
 //switch_position();
-// axe_with_fix();
+axe_with_fix();
