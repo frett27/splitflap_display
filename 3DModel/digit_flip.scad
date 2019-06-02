@@ -1,8 +1,5 @@
 
 
-
-
-
 include <relativity.scad>
 include <28byj-48.scad>
 include <switch.scad>
@@ -16,7 +13,8 @@ include <switch.scad>
 // pvc card dimensions
 
 flip_width = 53.98;
-flip_height = 86.2 / 2;
+flip_height = 86.2; //2
+flip_thick = 0.75;
 
 nbtrou = 12;
 thick = 1.5;
@@ -25,7 +23,7 @@ flip_fixure_diameter = 2;
 flip_fixure_diameter_play = 1; //radius
 
 // radius for flip 
-diameter_flip = 42;
+radius_flip_position = 42;
 // flip axis distance
 deport = 7.5;
 
@@ -33,7 +31,7 @@ deport = 7.5;
 margin_axe_external = 4;
 
 // motor distance link
-max_internal_radius = diameter_flip - 11;
+max_internal_radius = radius_flip_position - 11;
 
 // play for letting the elements move
 play = 0.2;
@@ -44,7 +42,7 @@ play = 0.2;
 
 angle_flip = 360/nbtrou;
 axe_external_diameter = 
-                (diameter_flip +
+                (radius_flip_position +
                  margin_axe_external) * 2;
 
 // internal centring
@@ -63,12 +61,12 @@ general_rotation_angle = 0;
 //$fs=0.3;
 
 
-module flip(width=30) {
+module flip(width=flip_width) {
     
     translate([0,flip_fixure_diameter/2,0]) {
         
         translate([0,deport,0]) { // deport
-            box(size=[width,flip_height,thick],
+            box(size=[width,flip_height,flip_thick],
                 anchor=[0,1,1]);
         }
         
@@ -93,7 +91,7 @@ module axe() {
             for (i = [0: nbtrou]) {
                 orient([z])
                 rotated(angle_flip*i*z)
-                translated(diameter_flip  *x)
+                translated(radius_flip_position  *x)
                 rod(d=flip_fixure_diameter 
                        + flip_fixure_diameter_play,h=10, $class="hole");
             }
@@ -176,7 +174,7 @@ module axe_with_holes() {
 module place_flip(index = 0, relative_angle = 0) {
      // second flip
     rotate([0, - index * angle_flip + general_rotation_angle ,0]) {
-        translate([diameter_flip,flip_width/2 + thick,0]) {
+        translate([radius_flip_position,flip_width/2 + thick,0]) {
             rotate([0,
                     -90 + relative_angle 
                         - general_rotation_angle,
@@ -219,7 +217,7 @@ module montage() {
 module butee() {
     butee_width = flip_width + 2 * thick;
     translated( (flip_width * z) + 
-            ( diameter_flip + thick) * x - 
+            ( radius_flip_position + thick) * x - 
             2 * thick * z 
                )
     box(size = [2,butee_width,5],anchor=[-1,-1,-1]);
@@ -345,11 +343,27 @@ module stator() {
 }
 
 
-
+module _fixing_stator_holes() {
+    
+      
+        // fixing holes, for skrews
+        // 1
+        translated( - 28byj48_shaft_offset * z
+                + 28byj48_mount_center_offset * x
+                + fixing_height * y)
+        orient([y])
+        rod( d=skrew_hole_size, h=10, $class="hole");
+        // 2
+        translated( - 28byj48_shaft_offset * z
+                - 28byj48_mount_center_offset * x
+                + fixing_height * y)
+        orient([y])
+        rod( d=skrew_hole_size, h=10, $class="hole");
+        
+    
+}
 
 module _stator_with_holding_hole() {
-    
-    
     
     differed("hole") {
         stator();
@@ -386,22 +400,8 @@ module _stator_with_holding_hole() {
                     + fixing_height * y)
         orient([y])
         rod( d=11, h=8, $class="hole");
-        
-        // fixing holes, for skrews
-        // 1
-        translated( - 28byj48_shaft_offset * z
-                + 28byj48_mount_center_offset * x
-                + fixing_height * y)
-        orient([y])
-        rod( d=skrew_hole_size, h=10, $class="hole");
-        // 2
-        translated( - 28byj48_shaft_offset * z
-                - 28byj48_mount_center_offset * x
-                + fixing_height * y)
-        orient([y])
-        rod( d=skrew_hole_size, h=10, $class="hole");
-        
-        
+      
+        _fixing_stator_holes();
         
     }
     
@@ -448,7 +448,7 @@ module arc(rayon,height,width,angle_start, angle_end) {
     polygon(points = concat(poly_points, o, o2));
 }
 
-module demi_patte(angle, patte_heigth=patte_height) {
+module demi_patte(angle, patte_height=patte_height) {
      
     internal_radius = (max_internal_radius + play);
     
@@ -479,7 +479,7 @@ module arc_ramp(rayon,height,width,angle_start, angle_end) {
 
 }
 
-module homing_pos(angle, patte_heigth=patte_height) {
+module homing_pos(angle, patte_height=patte_height) {
      
     internal_radius = (max_internal_radius + play);
     
@@ -492,7 +492,7 @@ module homing_pos(angle, patte_heigth=patte_height) {
     
 }
 
-module homing_pos_ramp(angle, offset=0, width = 10, patte_heigth=patte_height) {
+module homing_pos_ramp(angle, offset=0, width = 10, patte_height=patte_height) {
      
     internal_radius = (max_internal_radius + play);
     
@@ -620,7 +620,7 @@ module external_box() {
     depth = axe_external_diameter + back_margin;
     width = flip_width + 4 * thick;
     
-    height = 2 * (flip_height - deport + diameter_flip);
+    height = 2 * (flip_height - deport + radius_flip_position);
     
     // window
     window_height = 2 * flip_height;
@@ -714,8 +714,48 @@ module multiple_fixture_connected() {
     mount_card_play = 0.4;
     mount_width = flip_width + 2 * butee + mount_card_play;
 
+    support_flip_thick = 0.75;
+
+// this module create the card insert support
+module support_flip() {
+    
+    height = 3;
+    support_height = 30;
    
- 
+    difference () {
+        translate([-support_height+ deport,0,-height/2])
+        cube(size=[30,3,height]);
+    
+        translate([-support_height+ deport,
+                   support_flip_thick,
+        -flip_thick/2])
+        cube(size=[40,10,flip_thick]);
+        
+    }
+    
+    translate([0,-4/2,0])
+    orient([y])
+    rod(d=flip_fixure_diameter, h=4);
+}
+
+module multiple_support_flip() {
+    for (i = [0: nbtrou * 2]) {
+
+    translate([0,5*i,0])
+    rotate([-90,0,0])
+    support_flip();
+
+    }
+
+}
+
+// for display the flip flap with support
+/*translate([0,flip_width/2 + support_flip_thick,0])
+rotate([0,0,-90])
+flip();
+ */
+
+
 module mounting_fixture_butee() {
     
      
@@ -869,19 +909,20 @@ module all() {
     color("white") {
         montage();
     }
-    translate([0,28byj48_shaft_height - 28byj48_shaft_slotted_height / 2,0 ]) { 
+    translate([0,28byj48_shaft_height 
+                    - 28byj48_shaft_slotted_height / 2,0 ]) { 
         rotate ([90,0,0]) Stepper28BYJ48();
         color("red") {
             stator_with_holding_hole();
         }
-    
     }
    
      color("blue") {
+        translated( thick * y)
         rotor();
      }
      
-     external_box();
+     // external_box();
     
 }
 
@@ -904,11 +945,11 @@ difference() {
 
   all();
   
-   translate([-250,25,-250]) cube(size=[500,500,500]);
-  //translate([-250,-500 + 25,-250]) cube(size=[500,500,500]);
+  // translate([-250,25,-250]) cube(size=[500,500,500]);
+  translate([-250,-500 + 25,-250]) cube(size=[500,500,500]);
 }    
-*/
 
+*/
  
  
 /*
@@ -934,4 +975,4 @@ difference() {
 //stator_with_holding_hole();
 
 //switch_position();
-axe_with_fix();
+// axe_with_fix();

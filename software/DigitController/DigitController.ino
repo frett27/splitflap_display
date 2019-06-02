@@ -5,6 +5,7 @@
 // Library for controling the stepper
 #include "CheapStepper.h"
 
+#include "DigitCommandParser.h"
 
 
 void TaskSerialProtocol(void *parameters);
@@ -40,23 +41,11 @@ void setup() {
    initMotor();
     
    vTaskStartScheduler();
-  
 }
 
 
 
 static int objectifStep = -1; // no objectives
-
-
-static const int COMMAND_SERIAL_BUFFER_SIZE = 200;
-static char COMMAND_SERIAL_BUFFER[COMMAND_SERIAL_BUFFER_SIZE];
-
-static int state = 0; // 0 - Wait for start
-                      // 1 - Start detected and reading length
-                      // 2 - Content read
-                      // 5 - Waiting for end of char
-
-static int numberLengthToRead = 0;
 
 
 // Protocol handling
@@ -82,6 +71,7 @@ boolean startsWith(char *str, char *pattern) {
   }
 }
 
+
 void processCommand(const char *command) {
   
   Serial.print("Command Executed :");
@@ -102,105 +92,31 @@ void commandCanceled() {
   Serial.println("commandCanceled");
 }
 
+int readUpstream() {
+  return Serial.read();
+}
 
+int readDownStream() {
+  
+}
 
+static parser_t frontParser;
 
 // Serial State automaton
 void TaskSerialProtocol(void *parameters) {
-
-  // registering commands
-
-  int bufferPos = 0;
-  
-  for(;;) {
-     while (Serial.available() > 0) {
-        // read the incoming byte:
-        int incomingByte = Serial.read();
-        
-        if (incomingByte < 0) {
-          continue;
-        }
-        
-        switch (state) {
-          
-          case 0:
-             if (incomingByte == 'S')
-             {
-               state = 1;
-               Serial.println("move to 1");
-               numberLengthToRead = 3;
-             }
-             // reset buffer
-             bufferPos = 0;
-             break;
-          case 1:
-          
-              // overflow
-              if (bufferPos >= COMMAND_SERIAL_BUFFER_SIZE || incomingByte == '\n') {
-                bufferPos = 0;
-                state = 0;
-                continue;
-              }
-      
-              COMMAND_SERIAL_BUFFER[bufferPos++] = (char)incomingByte;
-              numberLengthToRead--;
-              if (numberLengthToRead <= 0) {
-                  COMMAND_SERIAL_BUFFER[bufferPos++] = 0;
-                  numberLengthToRead = atoi(COMMAND_SERIAL_BUFFER);
-                 
-                  if (numberLengthToRead <=0) {
-                    commandCanceled();
-                    // end of reading
-                    state = 0;
-                    Serial.println("move to 0");
-                 
-                    bufferPos = 0;
-                    continue;
-                  }
-                  Serial.println("move to 2");
-                  state = 2;
-                  bufferPos = 0;
-              }
-              
-            break;
-          case 2:
-               // READ Content
-               if ( (char)incomingByte == '\n') {
-                  // reset
-                  state = 0;
-                  bufferPos = 0;
-                  commandCanceled();
-                  continue;
-               }
-               
-              COMMAND_SERIAL_BUFFER[bufferPos++] = (char)incomingByte;
-              numberLengthToRead --;
-              if (numberLengthToRead <= 0) {
-                Serial.println("move to 5");
-                // end of line
-                COMMAND_SERIAL_BUFFER[bufferPos++] = 0;
-                state = 5;
-              }
-              break;
-           case 5:
-             if ( (char)incomingByte != '\n' ) {
-               commandCanceled();
-             } else {
-               // process command
-               processCommand(COMMAND_SERIAL_BUFFER);
-               
-             }
-             state = 0;
-             bufferPos = 0;   
-             break;          
-        } // switch
-     } // while
-  } // for
+    init(&frontParser);
+    for(;;) {
+       handleSerialReceive(&frontParser, &processCommand, &readUpstream, &commandCanceled);
+    }
 }
 
 
 ////////////////////////////////////////////////////////////////
 // Motor Controlling
+// 
+//  Motor is handled on interrupts to avoid the 15ms watch dog timer of 
+//  FreeRT Os
+//  This also smooth the move
 
 // Pins
 const int IN1 = 10;
@@ -245,6 +161,7 @@ void initMotor() {
     sei();
 }
 
+
 // global positionning
 static int currentStep = -1;
 static int totalSteps = -1;
@@ -253,7 +170,7 @@ static bool isIn = false;
 static int nbIn = 0;
 
 
-const int T_THRESHOLD = 50;
+const int T_THRESHOLD = 100;
 
 ISR(TIMER1_COMPA_vect) {
     
@@ -306,8 +223,8 @@ void TaskMotor(void *parameters) {
   
   Serial.println("Motor initialized");
   for(;;) {
-      vTaskDelay(100);
-      // Serial.println(analogRead(SWITCH));
+      vTaskDelay(10);
+      Serial.println(analogRead(SWITCH));
       Serial.print(currentStep);
       Serial.print("/");
       Serial.println(totalSteps);
