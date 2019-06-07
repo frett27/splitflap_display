@@ -4,8 +4,8 @@ use <libraries/paratslot_for_openscad_201205/paratslot.scad>
 
 include <digit_flip.scad>;
 
-structure_height = 140;
 
+structure_height = 140;
 
 angle = 20;
 
@@ -19,8 +19,8 @@ diameter_flip= 2 * radius_flip_position;
 
 
 
-$fa = 1;
-$fs=0.3;
+//$fa = 1;
+//$fs=0.3;
 
 
 ////////////////////////////////////////////////////
@@ -54,7 +54,8 @@ module _support() {
                 
                 //
                 rod(h=thick, 
-                d= 2 * 28byj48_mount_center_offset + skrew_hole_size +5 ,
+                d= 2 * 28byj48_mount_center_offset 
+                    + skrew_hole_size +5 ,
                 anchor =[0,0,-1])
                 align([0,0,1])
                 translated(5*y)
@@ -124,7 +125,9 @@ module support() {
 
 
     // dalle
-translated((offset_part + distance_to_support + sustain_structure_thick) * y
+translated((offset_part 
+            + distance_to_support 
+            + sustain_structure_thick) * y
             -structure_height *z)
 box(size=[180, 60 + sustain_structure_thick, bottom_support_height], 
     anchor=[0,1,1]);
@@ -144,5 +147,5 @@ _stator_with_holding_hole();
 
 */
 
-//all();
+// all();
 
