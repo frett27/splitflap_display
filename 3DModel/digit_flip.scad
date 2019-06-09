@@ -12,17 +12,25 @@ include <switch.scad>
 
 // pvc card dimensions
 
-flip_width = 53.98;
+pvc_card_width = 53.98;
+
+// card support thick
+support_flip_thick = 0.75;
+
+flip_width = pvc_card_width + 2*support_flip_thick;
 flip_height = 86.2; //2
 flip_thick = 0.75;
 
-nbtrou = 12;
+flips_numbers = 12;
 thick = 1.5;
 
+// fixture size
 flip_fixure_diameter = 2;
-flip_fixure_diameter_play = 1; //radius
 
-// radius for flip 
+// play for the flip fixture, for rotating
+flip_fixure_diameter_play = 1; // in diameter
+
+// radius for flip rotating fix
 radius_flip_position = 42;
 // flip axis distance
 deport = 7.5;
@@ -34,13 +42,14 @@ margin_axe_external = 4;
 max_internal_radius = radius_flip_position - 11;
 
 // play for letting the elements move
+// 0.2 is good
 play = 0.2;
 
 
 /////////////////////////////////
 // internal generation parameters
 
-angle_flip = 360/nbtrou;
+angle_flip = 360/flips_numbers;
 axe_external_diameter = 
                 (radius_flip_position +
                  margin_axe_external) * 2;
@@ -66,18 +75,28 @@ module flip(width=flip_width) {
     translate([0,flip_fixure_diameter/2,0]) {
         
         translate([0,deport,0]) { // deport
-            box(size=[width,flip_height,flip_thick],
+            box(size=[width - 2 * support_flip_thick,flip_height,flip_thick],
                 anchor=[0,1,1]);
         }
+
+
+        // 1 
+        translate([-width/2+support_flip_thick,0,0])
+        rotate([0,180,0]) // flip to have the pin on proper direction
+       
+        rotate([0,0,90]) // orient along card
+        translate([0,0, flip_thick / 2])
+        support_flip_card_reference();
         
-        mirrored([x])
-        translated(width/2*x)
-        align([x])
-        orient([1,0,0])        
-        rod(d=flip_fixure_diameter,h=5, anchor=[0,1,0]);
-    
+        translate([width/2 - support_flip_thick,0,0])
+        
+        rotate([0,0,90]) // orient along card
+        translate([0,0, - flip_thick / 2])
+        support_flip_card_reference();
+                
     }
 }
+
 
 module axe() {
     
@@ -88,7 +107,7 @@ module axe() {
             
             rod(d=axe_external_diameter ,h=thick)
             
-            for (i = [0: nbtrou]) {
+            for (i = [0: flips_numbers]) {
                 orient([z])
                 rotated(angle_flip*i*z)
                 translated(radius_flip_position  *x)
@@ -174,7 +193,7 @@ module axe_with_holes() {
 module place_flip(index = 0, relative_angle = 0) {
      // second flip
     rotate([0, - index * angle_flip + general_rotation_angle ,0]) {
-        translate([radius_flip_position,flip_width/2 + thick,0]) {
+        translate([radius_flip_position,flip_width/2,0]) {
             rotate([0,
                     -90 + relative_angle 
                         - general_rotation_angle,
@@ -194,13 +213,13 @@ module montage() {
     
     // one flip
     
-    place_flip(0);
-    place_flip(1, relative_angle=15);
-    place_flip(2, relative_angle=8);
-    place_flip(3, relative_angle=8);
-    place_flip(4, relative_angle=8);
-    place_flip(5, relative_angle=8);
-    place_flip(6, relative_angle=0);
+    place_flip(0, relative_angle = 180);
+    place_flip(1, relative_angle=180 - 15);
+    place_flip(2, relative_angle=180 - 8);
+    place_flip(3, relative_angle=180 - 8);
+    place_flip(4, relative_angle=180 - 8);
+    place_flip(5, relative_angle=180 - 8);
+    place_flip(6, relative_angle=180 - 0);
     place_flip(7, relative_angle=angle_flip);
     
     place_flip(8, relative_angle=2 * angle_flip);
@@ -212,6 +231,7 @@ module montage() {
     place_flip(11, relative_angle=5 * angle_flip);
    
 }
+
 
 // place the butee for the flip
 module butee() {
@@ -251,13 +271,13 @@ module tube(d,h,perfo) {
 }
 
 
-module threecircles(diameter=20, nbtrou=5) {
+module threecircles(diameter=20, flips_numbers=5, height=thick) {
     
-    rod(d=diameter, h=thick);
-    for(i = [0:360/nbtrou:360]) {
+    rod(d=diameter, h=height);
+    for(i = [0:360/flips_numbers:360]) {
         rotated([0,0,i])
         translated(diameter/2 * x)
-        rod(d=diameter, h=thick);    
+        rod(d=diameter, h=height);    
     }
 }
 
@@ -272,7 +292,8 @@ module stator() {
     
     // fixation 1
      translated(28byj48_mount_center_offset * x - 28byj48_shaft_offset * z + 28byj48_mount_bracket_height *y )
-        orient([y]) tube(d=fixing_base_radius, h = fixing_height, perfo = skrew_hole_size);
+    orient([y]) 
+    tube(d=fixing_base_radius, h = fixing_height, perfo = skrew_hole_size);
     
     // renfort 1
     strength_size= 6;
@@ -332,11 +353,14 @@ module stator() {
     
     // back support
     translated((28byj48_mount_bracket_height + fixing_height) *y ) {
-        
+        backthick = 3 * thick;
+        translated( - backthick / 2 *y )
         orient([y])
         {
             rotate([0,0,30])
-            threecircles(diameter=max_internal_radius, nbtrou=3);
+            threecircles(diameter=max_internal_radius, 
+                         flips_numbers=3,
+                        height=backthick);
         };
     }
     
@@ -425,6 +449,12 @@ module stator_with_holding_hole() {
     
 }
 
+
+
+//stator_with_holding_hole();
+//switch_placement();
+//rotor();
+
 ///////////////////////////////////////////////////////
 
 
@@ -466,11 +496,13 @@ module arc_ramp(rayon,height,width,angle_start, angle_end) {
     center = [ 0, rayon ];
     _max = angle_end;
     _min =angle_start;
+    
+    ramp_size_factor = 2;
    
     poly_points = [ for(i = [_min:_max]) 
        rayon * [ cos(i + 270),sin(i + 270) ] + center 
     ];
-    o2 = [ for(i = [_max - ( (_max-_min) /5):-0.3: _min ]) 
+    o2 = [ for(i = [_max - ( (_max-_min) /ramp_size_factor):-0.3: _min ]) 
        (rayon - height) * [ cos(i + 270),sin(i + 270) ] + center 
     ];
     
@@ -519,12 +551,12 @@ module rotor() {
 
     racc = 2;
     
-    tube_height = (flip_width + play + thick);
+    tube_height = (flip_width + 2 * play + thick);
     
     orient([y]) {
-    tube(d=(max_internal_radius + thick) * 2,
+    tube(d=(max_internal_radius + thick + play) * 2,
          h=tube_height,
-         perfo=2 * max_internal_radius + 2 * play); 
+         perfo=(max_internal_radius + play) * 2); 
     }
     
    
@@ -593,7 +625,8 @@ module axe_with_fix() {
 /////////////////////////////////////////////////////
 // external box
 
-// function for creating an empty box,
+// function for creating an empty box, width no content
+// inside
 module empty_box(width, depth, height, ethick, play) {
     
     translate([-depth/2 - play,-ethick - play, -height/2 - play])
@@ -657,205 +690,17 @@ module external_box() {
     
 }
 
-/////////////////////////////////////////////////////
-
-// card fixture
-fixture_height = 5;
-
-
-module fixture() {
-    cylinder(d = flip_fixure_diameter, h = 2);
-    translate([-0.5,0,-1.5])
-    box(size=[1,fixture_height,3]);
-}
-
-fixture_connector_size = 0.2;
-module fixture_with_connect() {
-    fixture();
-    
-    translate([-fixture_connector_size,fixture_height / 2,-fixture_connector_size])
-    
-    box(size=[fixture_connector_size,2*fixture_height,fixture_connector_size]);
-    
-    translate([-fixture_connector_size,0,fixture_height / 2 + 2])
-    box(size=[fixture_connector_size,fixture_connector_size,fixture_height]);
-    
-    
-}
-// fixture_with_connect() ;
-
-module multiple_fixture_connected() {
-
-   for (j= [0:5]) {
-       for(i = [0:6]){
-           translate([0,i* (fixture_height + fixture_height), j* (fixture_height + fixture_height)])
-           fixture_with_connect();
-           
-       }
-   }
-    
-}
-
-// multiple_fixture_connected();
-
-///////////////////////////////////////////////////////
-//
-// Mounting card facilities
-//
-//
-
-
-
-    mount_height = 1;
-    mount_depth = flip_height;
-    
-    butee = 2;
-    separate_butee = 0.4;
-    mount_card_play = 0.4;
-    mount_width = flip_width + 2 * butee + mount_card_play;
-
-    support_flip_thick = 0.75;
-
-// this module create the card insert support
-module support_flip() {
-    
-    height = 3;
-    support_height = 30;
-   
-    difference () {
-        translate([-support_height+ deport,0,-height/2])
-        cube(size=[30,3,height]);
-    
-        translate([-support_height+ deport,
-                   support_flip_thick,
-        -flip_thick/2])
-        cube(size=[40,10,flip_thick]);
-        
-    }
-    
-    translate([0,-4/2,0])
-    orient([y])
-    rod(d=flip_fixure_diameter, h=4);
-}
-
-module multiple_support_flip() {
-    for (i = [0: nbtrou * 2]) {
-
-    translate([0,5*i,0])
-    rotate([-90,0,0])
-    support_flip();
-
-    }
-
-}
-
-// for display the flip flap with support
-/*translate([0,flip_width/2 + support_flip_thick,0])
-rotate([0,0,-90])
-flip();
- */
-
-
-module mounting_fixture_butee() {
-    
-     
-    difference() {
-        // traversial
-        translate([-mount_width/2 + butee/2,
-                  -mount_depth/2,
-                  0])
-        box(size=[butee,mount_depth,2*mount_height]);
-        union() {
-            // cute the elements for the card support
-         
-            translate([-mount_width/2 + butee ,
-                  - deport + mount_card_play / 2,
-                  0])
-            box(size=[2 * butee, 
-                    flip_fixure_diameter + mount_card_play, 
-                    5 * mount_height]);
-        }
-    }
-   
-}
-
-module _mounting_general_support() {
-    
-    translate([0,-mount_depth/2,- mount_height/2])
-    box(size=[mount_width - 2 * butee,
-              mount_depth,mount_height]);
-    
-    mounting_fixture_butee();
-    mirror([y]) {
-      mounting_fixture_butee();
-    }
-    
-    translate([0,separate_butee/2, 0])
-    union() {
-        box(size=[mount_width,
-                  separate_butee,
-                  2 * mount_height]);
-        
-    }
-    
-}
-
-module mounting_fixture() {
-    
-    difference() {
-        union() {
-                _mounting_general_support();
-        }
-        union() {
-            
-            translate([-(flip_width + mount_card_play)/2,
-                       -deport,
-                       0.1])
-            rotate([0,-90,0])
-            scale([1.03,1.03,1.03])
-            fixture();
-            
-            mirror([y]) {
-                translate([-(flip_width + mount_card_play)/2,
-                           -deport,
-                            0.1])
-                rotate([0,-90,0])
-                scale([1.02,1.02,1.02])
-                fixture();
-                
-            }
-        }
-    }
-    
-    rotate([0,0,180]) {
-        _mounting_general_support();
-        
-    }
-        
-}
-
-
-module mounting_fixture_with_label() {
-    difference() {
-        mounting_fixture();        
-        translate([-18,10,-0.2])        
-        linear_extrude(height = 3) {
-            text("flip flap card support", size=3);
-        }        
-    }
-}
-
-
-
 
 
 
 /////////////////////////////////////////////
 // switch 
 
+swith_offset_position_in_material = 14.8;
+
 module switch_position() 
 {
-    translate([-6, fixing_height - 14,-5])
+    translate([-6, fixing_height - swith_offset_position_in_material,-5])
     rotate([0,-40,0])
     
     rotate([90,0,0])
@@ -873,7 +718,7 @@ module switch_space() {
     l = switch_width/2;
     h = switch_height + 7;
     
-    translate([-4, fixing_height - 14,-8])
+    translate([-4, fixing_height - swith_offset_position_in_material,-8])
     rotate([0,-40,0])
     rotate([90,0,0])
     translate([l,h/2,switch_deep/2])
@@ -887,7 +732,7 @@ module switch_placement() {
     // place switch
     // todo, refactor
 
-    translate([-6, fixing_height - 14,-5])
+    translate([-6, fixing_height - swith_offset_position_in_material,-5])
     rotate([0,-40,0])
     
     rotate([90,0,0])
@@ -899,33 +744,108 @@ module switch_placement() {
 }
 
 
+
+/////////////////////////////////////////////////
+// Fixtures
+
+    mount_height = 1;
+    mount_depth = flip_height;
+    
+    butee = 2;
+    separate_butee = 0.4;
+    mount_card_play = 0.4;
+    mount_width = flip_width + 2 * butee + mount_card_play;
+
+
+
+// flip support for reference on card contact inside
+module support_flip_card_reference() {
+    translate([0, -support_flip_thick , 0] ) 
+    support_flip();
+}
+
+
+// this module create the card insert support
+module support_flip() {
+    
+    height = 3;
+    support_height = 30;
+    pico_length = 2;
+   
+    difference () {
+        translate([-support_height+ deport,0,-height/2])
+        cube(size=[30,3,height]);
+    
+        translate([-support_height+ deport,
+                   support_flip_thick,
+        -flip_thick/2])
+        cube(size=[40,10,flip_thick]);
+        
+    }
+    
+    translate([0,-4/2,0])
+    orient([y])
+    rod(d=flip_fixure_diameter, h=pico_length);
+}
+
+module multiple_support_flip() {
+    for (i = [0: flips_numbers * 2]) {
+
+        translate([0,5*i,0])
+        rotate([-90,0,0])
+        support_flip();
+
+    }
+
+}
+
+
 /////////////////////////////////////////////////////
 // General module
 
-module all() {
- 
-    axe_with_fix();
-   
-    color("white") {
-        montage();
-    }
-    translate([0,28byj48_shaft_height 
+module rotor_g() {
+     translated( thick * y)
+        rotor();
+    
+}
+
+module stator_g() {
+     translate([0,28byj48_shaft_height 
                     - 28byj48_shaft_slotted_height / 2,0 ]) { 
         rotate ([90,0,0]) Stepper28BYJ48();
         color("red") {
             stator_with_holding_hole();
         }
     }
+    
+}
+
+module montage_g() {
+    color("white") {
+        translate([0,thick + play, 0])
+        // all flips
+        montage();
+    }
+}
+
+
+module all() {
+ 
+    axe_with_fix();
+    
+    montage_g();
+    
+    stator_g();
    
-     color("blue") {
-        translated( thick * y)
-        rotor();
-     }
+    color("blue") {
+       rotor_g();
+    }
      
      // external_box();
     
 }
 
+// all();
 
 /////////////////////////////////////////////
 /*

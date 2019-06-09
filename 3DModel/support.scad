@@ -1,21 +1,28 @@
 
 
-use <libraries/paratslot_for_openscad_201205/paratslot.scad>
+// use <libraries/paratslot_for_openscad_201205/paratslot.scad>
 
 include <digit_flip.scad>;
 
 
-structure_height = 140;
+structure_height = 123;
 
-angle = 20;
+bottom_support_height = 7;
+
+sustain_structure_thick = 7;
+
+
+angle = 40;
+
 
 
 height_axis = 2*28byj48_shaft_offset;
 
 main_structure_height = (structure_height * 2)/cos(angle);
 
-sustain_structure_thick = 7;
+
 diameter_flip= 2 * radius_flip_position;
+
 
 
 
@@ -26,7 +33,7 @@ diameter_flip= 2 * radius_flip_position;
 ////////////////////////////////////////////////////
 //
 
-module base_structure_real() {
+module _support_pylon_real() {
     translate([-2 * sustain_structure_thick,0,0])
     for (i = [0:2]) {
         translate([i*14,0,0])
@@ -35,12 +42,16 @@ module base_structure_real() {
     }
 }
 
-module base_structure() {
+module _support_pylon() {
     box(size=[42,sustain_structure_thick,main_structure_height],anchor=[0,-1,1]);
 }
 
 
-distance_to_support = 6; // mm from holes
+
+distance_to_support = 4; // mm from holes
+
+
+// distance_to_support = 6; // mm from holes
 
 module oblong(width=10, height=30, thick=2, class="oblong") {
     rod(d=width,h=thick, $class=class)
@@ -48,7 +59,7 @@ module oblong(width=10, height=30, thick=2, class="oblong") {
 }
 
 
-module _support() {
+module _support_fixation_stator() {
         orient([0,1,0])
         differed("hole") {
                 
@@ -87,12 +98,12 @@ module _support() {
         }
 
 }
+// offset_part = 55;
 
+// distance from center motor axis and the fixing
+// plane
+offset_part = 56.5;
 
-offset_part = 55;
-
-
-bottom_support_height = 10;
 
 module ground() {
     translated(- (structure_height + bottom_support_height) * z)
@@ -105,16 +116,16 @@ module support() {
         difference() {    
             translated(28byj48_shaft_offset*z)
             {
-                _support();
+                _support_fixation_stator();
                 
                 translated(distance_to_support*y)
                 
-                    base_structure();
+                _support_pylon();
 
                 
             };
-            margin = 6;
-            translated(distance_to_support*y)
+            margin = 7;
+            translated(distance_to_support*y - 0.01 * y)
             rotate([-90,0,0])
                    tube(d=diameter_flip + margin,
                             perfo=diameter_flip - margin,
@@ -124,22 +135,49 @@ module support() {
     }
 
 
+    dalle();
+}
+
+base_support_large = 60 + sustain_structure_thick;
+
+module dalle() {
     // dalle
-translated((offset_part 
-            + distance_to_support 
-            + sustain_structure_thick) * y
-            -structure_height *z)
-box(size=[180, 60 + sustain_structure_thick, bottom_support_height], 
-    anchor=[0,1,1]);
+    base_support_width = 180;
+    
+    translated((offset_part 
+                + distance_to_support 
+                + sustain_structure_thick) * y
+                -structure_height *z +
+               (base_support_width / 2 - axe_external_diameter / 2) * x
+               )
+    box(size=[base_support_width, base_support_large ,          bottom_support_height], 
+        anchor=[0,1,1]);
 }
 
-difference() {
-    support();
- ground();
+
+
+
+multiple_shift_position = base_support_large +2;
+for( i = [0:3]) {
+    
+    translate([0, -(multiple_shift_position) * i,0]) {
+            
+        difference() {
+         support();
+         ground();
+        }
+
+        montage_g();
+        rotor_g();
+        stator_g();
+        
+    }
 }
 
+// rotor_g();
+//stator_g();
 
-
+//show the contact piece
 /*
 rotate([0,180,0])
 translate([0,-10,0])
@@ -147,5 +185,7 @@ _stator_with_holding_hole();
 
 */
 
-// all();
+
+// show all other parts
+//all();
 
