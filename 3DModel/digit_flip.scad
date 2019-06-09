@@ -18,7 +18,7 @@ pvc_card_width = 53.98;
 support_flip_thick = 0.75;
 
 flip_width = pvc_card_width + 2*support_flip_thick;
-flip_height = 86.2; //2
+flip_height = 86.2/2; //2
 flip_thick = 0.75;
 
 flips_numbers = 12;
@@ -31,15 +31,18 @@ flip_fixure_diameter = 2;
 flip_fixure_diameter_play = 1; // in diameter
 
 // radius for flip rotating fix
-radius_flip_position = 42;
+
+/* initialement 42 */
+radius_flip_position = 44; 
 // flip axis distance
-deport = 7.5;
+/* initialement 7.5 */
+deport = 10;
 
 // distance between the flip holes and external
 margin_axe_external = 4;
 
 // motor distance link
-max_internal_radius = radius_flip_position - 11;
+max_internal_radius = 42 /* radius_flip_position */ - 11;
 
 // play for letting the elements move
 // 0.2 is good
@@ -55,7 +58,7 @@ axe_external_diameter =
                  margin_axe_external) * 2;
 
 // internal centring
-patte_height = 2;
+internal_centring_elements_height = 2;
 
 fixing_height = 28byj48_chassis_height + (flip_width - 28byj48_chassis_height) - 28byj48_shaft_height + 28byj48_shaft_slotted_height / 2;
 
@@ -71,11 +74,13 @@ general_rotation_angle = 0;
 
 
 module flip(width=flip_width) {
-    
-    translate([0,flip_fixure_diameter/2,0]) {
+    // flip_fixure_diameter/2
+    translate([0,0,0]) {
         
         translate([0,deport,0]) { // deport
-            box(size=[width - 2 * support_flip_thick,flip_height,flip_thick],
+            box(size=[width - 2 * support_flip_thick,
+                        flip_height,
+                        flip_thick],
                 anchor=[0,1,1]);
         }
 
@@ -148,7 +153,7 @@ module axe_with_holes() {
               translate([0,element_width/2,-internal_radius])
               rotate([90,0,0])
               arc(rayon=internal_radius,
-                  height=patte_height,
+                  height=internal_centring_elements_height,
                   width=element_width, 
                   angle_start=-9, 
                   angle_end=9);
@@ -232,7 +237,7 @@ module montage() {
    
 }
 
-
+/*
 // place the butee for the flip
 module butee() {
     butee_width = flip_width + 2 * thick;
@@ -242,7 +247,7 @@ module butee() {
                )
     box(size = [2,butee_width,5],anchor=[-1,-1,-1]);
 }
-
+*/
 
 // show motor
 module motor() {
@@ -478,14 +483,14 @@ module arc(rayon,height,width,angle_start, angle_end) {
     polygon(points = concat(poly_points, o, o2));
 }
 
-module demi_patte(angle, patte_height=patte_height) {
+module demi_patte(angle, internal_centring_elements_height=internal_centring_elements_height) {
      
     internal_radius = (max_internal_radius + play);
     
     element_width = 10;
     translate([0,element_width/2,-internal_radius])
     rotate([90,0,0])
-    arc(rayon=internal_radius,height=patte_height,width=element_width, angle_start=angle, angle_end=angle + 20);
+    arc(rayon=internal_radius,height=internal_centring_elements_height,width=element_width, angle_start=angle, angle_end=angle + 20);
 
     
 }
@@ -511,20 +516,20 @@ module arc_ramp(rayon,height,width,angle_start, angle_end) {
 
 }
 
-module homing_pos(angle, patte_height=patte_height) {
+module homing_pos(angle, internal_centring_elements_height=internal_centring_elements_height) {
      
     internal_radius = (max_internal_radius + play);
     
     element_width = 10;
     translate([0,element_width/2,-internal_radius])
     rotate([90,0,0])
-    arc_ramp(rayon=internal_radius,height=patte_height,width=element_width, angle_start=angle, angle_end=angle + 40);
+    arc_ramp(rayon=internal_radius,height=internal_centring_elements_height,width=element_width, angle_start=angle, angle_end=angle + 40);
 
-    homing_pos_ramp(angle, offset=element_width,patte_height = patte_height);
+    homing_pos_ramp(angle, offset=element_width,internal_centring_elements_height = internal_centring_elements_height);
     
 }
 
-module homing_pos_ramp(angle, offset=0, width = 10, patte_height=patte_height) {
+module homing_pos_ramp(angle, offset=0, width = 10, internal_centring_elements_height=internal_centring_elements_height) {
      
     internal_radius = (max_internal_radius + play);
     
@@ -534,7 +539,7 @@ module homing_pos_ramp(angle, offset=0, width = 10, patte_height=patte_height) {
         translate([0,offset + i,-internal_radius])
         rotate([90,0,0])
         arc_ramp(rayon=internal_radius,
-                 height=patte_height/width * (width - i),
+                 height=internal_centring_elements_height/width * (width - i),
                  width= step,
                  angle_start=angle, 
                  angle_end=angle + 40);
@@ -603,7 +608,7 @@ module rotor() {
     
      // patte
     translate([0,fixing_height - 24])
-    homing_pos(angle=-120, patte_height = 3);
+    homing_pos(angle=-120, internal_centring_elements_height = 3);
 
 
 }
@@ -650,10 +655,12 @@ module external_box() {
     // back depth margin
     back_margin = flip_height / 2;
     
+   
     depth = axe_external_diameter + back_margin;
     width = flip_width + 4 * thick;
-    
     height = 2 * (flip_height - deport + radius_flip_position);
+    
+    height_deport = flip_height / 4;
     
     // window
     window_height = 2 * flip_height;
@@ -662,9 +669,9 @@ module external_box() {
     // window for the digits
     echo("depth=",depth,"width=", width,"height=", height);
     difference() {
-        translate([(- back_margin)/2,
+        translate([( back_margin)/2,
                     0,
-                    - flip_height/3])
+                    -height_deport])
         empty_box(width=width, 
                 depth=depth, 
                 height=height, 
@@ -672,18 +679,18 @@ module external_box() {
                 play=1);
         
        
-        translate([0,
+        translate([-2/3*depth,
                    -thick,
                     - window_height + 
                     flip_height 
                     - deport - butee_size]) 
-        cube([1000,width,window_height]);
+        cube([depth,width,window_height]);
     }
     
     // Electronic box
     ebox_height = 30;
     ebox_depth = 40;
-    translate([back_margin - depth /2 - ebox_depth/2   ,
+    translate([- (back_margin - depth /2 - ebox_depth/2)   ,
                width/2, 
                 -depth +  ebox_height/2 + flip_height/2 ])
     box(size=[ebox_depth,width , ebox_height]);
@@ -768,25 +775,42 @@ module support_flip_card_reference() {
 // this module create the card insert support
 module support_flip() {
     
+    // height of support
+    // should be more than flip width
     height = 3;
+    // height along the card
     support_height = 30;
-    pico_length = 2;
-   
-    difference () {
-        translate([-support_height+ deport,0,-height/2])
-        cube(size=[30,3,height]);
+    // fixture length
+    pico_length = 3;
     
-        translate([-support_height+ deport,
-                   support_flip_thick,
-        -flip_thick/2])
-        cube(size=[40,10,flip_thick]);
-        
+    difference () {
+        translate([-support_height + deport,0,-height/2])
+        cube(size=[support_height,height,height]);
+    
+           
+        union() {
+            // card cut
+            translate([-support_height+ deport,
+                       support_flip_thick,
+            -flip_thick/2])
+            cube(size=[40,10,flip_thick]);
+            
+            // champfer
+            translate([deport ,0,0])
+            translate([0,height,0])
+            rotate([0,0,-45])
+            box(size=[height,height * 3, height],
+                anchor=[-1,0,0]);
+        }
     }
     
-    translate([0,-4/2,0])
+    // pico
+    translate([0,-pico_length/2,0])
     orient([y])
     rod(d=flip_fixure_diameter, h=pico_length);
 }
+
+//support_flip();
 
 module multiple_support_flip() {
     for (i = [0: flips_numbers * 2]) {
@@ -798,6 +822,7 @@ module multiple_support_flip() {
     }
 
 }
+
 
 
 /////////////////////////////////////////////////////
@@ -828,6 +853,9 @@ module montage_g() {
     }
 }
 
+montage_g();
+rotor_g();
+
 
 module all() {
  
@@ -841,18 +869,19 @@ module all() {
        rotor_g();
     }
      
-     // external_box();
     
 }
 
 // all();
 
 /////////////////////////////////////////////
+
 /*
 difference() {
     
     union() {
      all();
+    
      external_box();
     }
     

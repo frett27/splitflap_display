@@ -5,20 +5,21 @@
 include <digit_flip.scad>;
 
 
-structure_height = 123;
+// distance from axis to base
+structure_height = (flip_height - deport + radius_flip_position);
+
+// echo (structure_height);
 
 bottom_support_height = 7;
 
 sustain_structure_thick = 7;
 
 
-angle = 40;
-
-
+angle_pylon = 40;
 
 height_axis = 2*28byj48_shaft_offset;
 
-main_structure_height = (structure_height * 2)/cos(angle);
+main_structure_height = (structure_height * 2)/cos(angle_pylon);
 
 
 diameter_flip= 2 * radius_flip_position;
@@ -43,11 +44,78 @@ module _support_pylon_real() {
 }
 
 module _support_pylon() {
-    box(size=[42,sustain_structure_thick,main_structure_height],anchor=[0,-1,1]);
+    
+    pylon_width = 42;
+    
+    difference() { // for hole for the next axis
+        
+        union() {
+            difference() {
+               box(size=[pylon_width,sustain_structure_thick,      
+                         main_structure_height],
+                         anchor=[0,-1,1]);
+            
+               // cable pass
+               depth = 6;
+               mirror([1,0,0])
+               union() {
+                   // on the pylon side
+                   translate([-pylon_width/2,
+                                thick])
+                   box(size= [depth, sustain_structure_thick - 2 * thick, 
+                              main_structure_height],
+                        anchor=[-1,-1,1]);
+                   
+                   // on the top to help guide the cables
+                   rotate([0,-angle_pylon/2,0])// angle for passing cables
+                   translate([0,thick,0])
+                   box(size= [pylon_width, 
+                          sustain_structure_thick - 2 * thick,
+                          depth],
+                        anchor=[0,-1,-1]);
+                   
+                   
+               }
+            }
+            
+            // upper support
+            upper_pylon_width = sustain_structure_thick * 3 / 4;
+            translate([0,sustain_structure_thick - upper_pylon_width]) {
+                d = pylon_width/4;
+                
+                
+                    box(size=[d,
+                              upper_pylon_width,
+                              radius_flip_position ],
+                        anchor=[1,-1,-1]);
+                
+                translate([0,0, radius_flip_position])
+                rotate([0,angle_pylon,0])
+                box(size=[d,
+                          upper_pylon_width,
+                          (flip_height - deport)*sin(45)], // angle
+                    anchor=[1,-1,-1]);
+                    
+                translate([0,0, radius_flip_position])
+                rotate([0,angle_pylon,0])
+                box(size=[d,
+                          upper_pylon_width,
+                          main_structure_height],
+                    anchor=[1,-1,1]);
+                
+            }
+        }
+        
+            // hole for passing the next module axis
+         hole_diameter = 28byj48_shaft_radius * 2 + play;
+         orient(y)
+         rod(d=hole_diameter, h=2*sustain_structure_thick + 0.1, anchor=[0,0,0]);
+    }
 }
 
+// _support_pylon();
 
-
+top_distance = radius_flip_position + (flip_height - deport)*sin(45);
 distance_to_support = 4; // mm from holes
 
 
@@ -111,8 +179,9 @@ module ground() {
 }
 
 module support() {
-    rotated( -angle *y)
+    rotated( -angle_pylon *y)
     translated(offset_part * y) {
+        
         difference() {    
             translated(28byj48_shaft_offset*z)
             {
@@ -124,25 +193,69 @@ module support() {
 
                 
             };
-            margin = 7;
-            translated(distance_to_support*y - 0.01 * y)
-            rotate([-90,0,0])
-                   tube(d=diameter_flip + margin,
-                            perfo=diameter_flip - margin,
-                            h=2);
-        
+            
+            // pin way
+            union() {
+                margin = 7;
+                way_height = 2;
+                translated(distance_to_support*y - 0.01 * y)
+                rotate([-90,0,0])
+                tube(d=diameter_flip + margin,
+                       perfo=diameter_flip - margin,
+                       h=way_height);
+                
+                translated( (distance_to_support 
+                             + sustain_structure_thick 
+                            - way_height) * y)
+                rotate([-90,0,0])
+                tube(d=diameter_flip + margin,
+                       perfo=diameter_flip - margin,
+                       h=way_height + 0.1);
+                
+            }
         }
     }
-
-
+    
+    front_panels();
     dalle();
 }
+
+base_support_width = 180;
+
+module front_panels() {
+    
+     // bottom
+     translated((offset_part 
+                + distance_to_support 
+                + sustain_structure_thick) * y
+                -structure_height *z +
+    
+               -(base_support_width / 2 
+                    - axe_external_diameter / 2 + thick) * x
+               )
+     box(size = [thick,base_support_large, 20 ], anchor=[1,1,-1] );
+
+     // up
+     translated((offset_part 
+                + distance_to_support 
+                + sustain_structure_thick) * y
+                + top_distance *z +
+    
+               -(base_support_width / 2 
+                    - axe_external_diameter / 2 + thick) * x
+               )
+     box(size = [thick,base_support_large, 35 ], anchor=[1,1,1] );
+
+
+}
+
+// support();
 
 base_support_large = 60 + sustain_structure_thick;
 
 module dalle() {
     // dalle
-    base_support_width = 180;
+   
     
     translated((offset_part 
                 + distance_to_support 
@@ -156,26 +269,41 @@ module dalle() {
 
 
 
+module display_modules(number_of_modules = 6, margin = 2) {
 
-multiple_shift_position = base_support_large +2;
-for( i = [0:3]) {
-    
-    translate([0, -(multiple_shift_position) * i,0]) {
-            
-        difference() {
-         support();
-         ground();
-        }
-
-        montage_g();
-        rotor_g();
-        stator_g();
+    multiple_shift_position = base_support_large;
+    for( i = [0:number_of_modules]) {
         
+        translate([0, -(multiple_shift_position + margin) * i,0]) {
+                
+            difference() {
+             support();
+             ground();
+            }
+            
+            axe_with_fix();
+            montage_g();
+            rotor_g();
+            stator_g();
+            
+            
+        }
     }
+
 }
 
-// rotor_g();
-//stator_g();
+display_modules(number_of_modules = 3, margin = 30 - $t);
+
+
+ difference() {
+             support();
+             ground();
+            }
+
+ rotor_g();
+            montage_g();
+stator_g();
+
 
 //show the contact piece
 /*
