@@ -80,7 +80,8 @@ module _support_pylon() {
             
             // upper support
             upper_pylon_width = sustain_structure_thick * 3 / 4;
-            translate([0,sustain_structure_thick - upper_pylon_width]) {
+            translate([0,
+                       sustain_structure_thick - upper_pylon_width]) {
                 d = pylon_width/4;
                 
                 
@@ -108,8 +109,13 @@ module _support_pylon() {
         
             // hole for passing the next module axis
          hole_diameter = 28byj48_shaft_radius * 2 + play;
+         translated(- 28byj48_shaft_offset*z 
+                    + (sustain_structure_thick ) *y) 
+                // for having the hole at 0
          orient(y)
-         rod(d=hole_diameter, h=2*sustain_structure_thick + 0.1, anchor=[0,0,0]);
+         rod(d=hole_diameter, 
+             h=sustain_structure_thick , 
+             anchor=[0,0,0]);
     }
 }
 
@@ -131,7 +137,6 @@ module _support_fixation_stator() {
         orient([0,1,0])
         differed("hole") {
                 
-                //
                 rod(h=thick, 
                 d= 2 * 28byj48_mount_center_offset 
                     + skrew_hole_size +5 ,
@@ -147,7 +152,6 @@ module _support_fixation_stator() {
                 translated(-10*y)
                 box(size=[50,50,50],$class="hole", 
                             anchor=[0,1,0]);
-                        
             
                 // central    
                 oblong(thick=90, 
@@ -157,7 +161,7 @@ module _support_fixation_stator() {
                 // trous        
                 translated((height_axis + skrew_hole_size / 2)*x)
                 oblong(width=skrew_hole_size,thick=90 , class="hole");
-                translated(-(height_axis + skrew_hole_size /2 )*x)
+                translated(-(height_axis + skrew_hole_size /2)*x)
                 
                 
                 oblong(width=skrew_hole_size,thick=90 , class="hole");
@@ -198,12 +202,15 @@ module support() {
             union() {
                 margin = 7;
                 way_height = 2;
+                
+                // 1st way
                 translated(distance_to_support*y - 0.01 * y)
                 rotate([-90,0,0])
                 tube(d=diameter_flip + margin,
                        perfo=diameter_flip - margin,
                        h=way_height);
                 
+                // 2nd way
                 translated( (distance_to_support 
                              + sustain_structure_thick 
                             - way_height) * y)
@@ -216,9 +223,10 @@ module support() {
         }
     }
     
-    front_panels();
     dalle();
 }
+
+// support();
 
 base_support_width = 180;
 
@@ -233,7 +241,8 @@ module front_panels() {
                -(base_support_width / 2 
                     - axe_external_diameter / 2 + thick) * x
                )
-     box(size = [thick,base_support_large, 20 ], anchor=[1,1,-1] );
+     box(size = [thick,base_support_large, 20 ], 
+         anchor=[1,1,-1] );
 
      // up
      translated((offset_part 
@@ -244,7 +253,8 @@ module front_panels() {
                -(base_support_width / 2 
                     - axe_external_diameter / 2 + thick) * x
                )
-     box(size = [thick,base_support_large, 35 ], anchor=[1,1,1] );
+     box(size = [thick,base_support_large, 35 ], 
+         anchor=[1,1,1] );
 
 
 }
@@ -292,17 +302,41 @@ module display_modules(number_of_modules = 6, margin = 2) {
 
 }
 
-display_modules(number_of_modules = 3, margin = 30 - $t);
+
+module cut_view() {
+
+    difference() {
+        
+        display_modules(number_of_modules = 1, margin = 1);
+        // cut to check
+        translate([0,-10,0])
+        cube(size=[1000,1000,1000]);
+    }
+}
 
 
- difference() {
-             support();
-             ground();
-            }
+module exploded_view() {
 
- rotor_g();
-            montage_g();
-stator_g();
+    difference() {
+         support();
+         ground();
+    }
+
+    translate([0,-50,0])
+    stator_g();
+
+    translate([0,-120,0])
+    rotor_g();
+
+    translate([0,-200,0])
+    montage_g();
+
+    translate([0,-250,0])
+    axe_with_fix();            
+
+
+}
+
 
 
 //show the contact piece

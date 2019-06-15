@@ -38,6 +38,7 @@ The module has the following dimensions currently, using a PVC card as reference
 | FLIP-1-3D3       | 1    | Rotor - 2                                   | 2    |
 | FLIP-1-CARDS     | 6    | Flip cards (6 * 2) half cards               | 10   |
 | FLIP-1-MOTOR_CMD | 1    | 28byj-48 - module with command card (LN218) | 4    |
+| FLIP-1-SWITCH    | 1    | Homing switch                               |      |
 
 <u>Currently in tests:</u>
 

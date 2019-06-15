@@ -853,9 +853,10 @@ module montage_g() {
     }
 }
 
+/*
 montage_g();
 rotor_g();
-
+*/
 
 module all() {
  
