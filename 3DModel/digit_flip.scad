@@ -69,8 +69,8 @@ general_rotation_angle = 0;
 // uncomment this for generating STL,
 //
 
-//$fa = 1;
-//$fs=0.3;
+// $fa = 1;
+// $fs=0.3;
 
 
 module flip(width=flip_width) {
@@ -771,58 +771,98 @@ module support_flip_card_reference() {
     support_flip();
 }
 
+// height of support
+    // should be more than flip width
+support_flip_height = 3;
+// height along the card
+support_flip_support_height = 30;
+// fixture length
+support_flip_pico_length = 3;
+
 
 // this module create the card insert support
 module support_flip() {
     
-    // height of support
-    // should be more than flip width
-    height = 3;
-    // height along the card
-    support_height = 30;
-    // fixture length
-    pico_length = 3;
+    
     
     difference () {
-        translate([-support_height + deport,0,-height/2])
-        cube(size=[support_height,height,height]);
+        translate([-support_flip_support_height + deport,0,-support_flip_height/2])
+        cube(size=[support_flip_support_height,
+                    support_flip_height,
+                    support_flip_height]);
     
            
         union() {
             // card cut
-            translate([-support_height+ deport,
+            translate([-support_flip_support_height+ deport,
                        support_flip_thick,
             -flip_thick/2])
             cube(size=[40,10,flip_thick]);
             
             // champfer
             translate([deport ,0,0])
-            translate([0,height,0])
+            translate([0,support_flip_height,0])
             rotate([0,0,-45])
-            box(size=[height,height * 3, height],
+            box(size=[support_flip_height,
+                        support_flip_height * 3, 
+                        support_flip_height],
                 anchor=[-1,0,0]);
         }
     }
     
     // pico
-    translate([0,-pico_length/2,0])
+    translate([0,-support_flip_pico_length/2,0])
     orient([y])
-    rod(d=flip_fixure_diameter, h=pico_length);
+    rod(d=flip_fixure_diameter, h=support_flip_pico_length);
 }
 
 //support_flip();
 
-module multiple_support_flip() {
-    for (i = [0: flips_numbers * 2]) {
+module __multiple_flip_supports() {
+    
+    support_height = 0.2;
+    
+    translate([support_flip_support_height/2 - deport,          
+                support_flip_height - support_height,1])
+                cube(size=[2,support_height,3]);
+                
+    for (i = [-support_flip_support_height + deport:
+                support_flip_support_height/2 - deport: 
+                   7]) {
+                translate([i,support_flip_height - support_height,1])
+                cube(size=[1,support_height,3]);
+    }
+    
+    // long fix
+                translate([-support_flip_support_height ,support_flip_height - support_height,2])
+                cube(size=[2*support_flip_support_height - deport, support_height,1]);
+                // long fix relation
+                translate([-support_flip_support_height ,support_flip_height - support_height,0])
+                cube(size=[2,support_height,5]);
+    translate([support_flip_support_height - deport ,support_flip_height - support_height,0])
+                cube(size=[2,support_height,5]);
+    
+}
+
+module multiple_support_flip(flips_numbers = flips_numbers * 2) {
+    for (i = [0: flips_numbers]) {
 
         translate([0,5*i,0])
         rotate([-90,0,0])
-        support_flip();
-
+        union() {
+            __multiple_flip_supports();
+             mirror([0,0,1]) {
+            // fix element between them
+            __multiple_flip_supports();  
+            }
+            support_flip();
+            
+        }
     }
 
 }
-
+// support_flip();
+ //multiple_support_flip();
 
 
 /////////////////////////////////////////////////////
@@ -916,8 +956,6 @@ difference() {
 
 /////////////////////////////////////////
 // details of every parts
-
-// mounting_fixture_with_label();
 
 //rotate([0,90,0])
 
