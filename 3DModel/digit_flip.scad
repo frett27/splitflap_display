@@ -47,6 +47,7 @@ max_internal_radius = 42 /* radius_flip_position */ - 11;
 // play for letting the elements move
 // 0.2 is good
 play = 0.2;
+transverse_play = play + 0.5;
 
 
 /////////////////////////////////
@@ -556,7 +557,7 @@ module rotor() {
 
     racc = 2;
     
-    tube_height = (flip_width + 2 * play + thick);
+    tube_height = (flip_width + 2 * transverse_play + thick);
     
     orient([y]) {
     tube(d=(max_internal_radius + thick + play) * 2,
