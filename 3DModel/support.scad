@@ -261,6 +261,8 @@ module front_panels() {
 
 // support();
 
+//front_panels();
+
 base_support_large = 60 + sustain_structure_thick;
 
 module dalle() {

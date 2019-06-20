@@ -38,6 +38,8 @@ static uint8_t attributedAddress = -1;
 
 // global positionning (motor)
 static int currentStep = -1;
+
+// total step = -1 -> no homing done yet
 static int totalSteps = -1;
 
 
@@ -159,7 +161,7 @@ void processBackCommand(const char *command) {
 
 void moveTo(uint16_t digit) {
   uint16_t stepsInterval = totalSteps / NUMBER_OF_DIGITS;
-  uint16_t s =  digit * totalSteps / NUMBER_OF_DIGITS + stepsInterval / 2;
+  uint16_t s =  digit * totalSteps / NUMBER_OF_DIGITS + stepsInterval * 3 / 4 ;
   objectifStep = s % totalSteps;
 }
 
@@ -252,13 +254,13 @@ void TaskSerialProtocol(void *parameters) {
 //  FreeRT Os
 //  This also smooth the move
 
-// Pins
+// Pins in the design
 const int IN1 = 10;
 const int IN2 = 16;
 const int IN3 = 14;
 const int IN4 = 15;
 
-// Homing
+// Homing SWITCH READING
 const int SWITCH = 18;
 
 // managing the stepper steps
@@ -338,8 +340,13 @@ ISR(TIMER1_COMPA_vect) {
                 currentStep = 0;
               } else {
                 // adjust the stepnumber
+                bool inHoming = (totalSteps == -1);
                 totalSteps = currentStep;
                 currentStep = 0;
+                if (inHoming) {
+                  // next first objective is 0
+                  moveTo(0);
+                }
               }
                isIn = false;
             } 
