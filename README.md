@@ -46,7 +46,7 @@ for more informations, go to **doc/** folder on how to print and build
 
 #### V1
 
-- [ ] 3D Print - V1 
+- [x] 3D Print - V1 
 - [x] Electronic Schematic
 - [x] Card Mounting
 - [x] Software

@@ -361,9 +361,9 @@ void TaskMotor(void *parameters) {
   Serial.println(F("Motor initialized"));
   for(;;) {
       vTaskDelay(100);
-      // char buffer[40];
-      // sprintf(buffer, "%d / %d", currentStep, totalSteps);
-      // Serial.println(buffer);
+       char buffer[40];
+       sprintf(buffer, "%d / %d", currentStep, totalSteps);
+      Serial.println(buffer);
      
       //pushMessageToQueue(buffer, xFrontSendingQueue);
   }

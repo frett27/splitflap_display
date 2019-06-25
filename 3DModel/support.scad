@@ -223,7 +223,7 @@ module support() {
         }
     }
     
-    dalle();
+    dalle_g();
 }
 
 // support();
@@ -265,18 +265,24 @@ module front_panels() {
 
 base_support_large = 60 + sustain_structure_thick;
 
-module dalle() {
-    // dalle
+module dalle_g() {
    
-    
     translated((offset_part 
                 + distance_to_support 
                 + sustain_structure_thick) * y
                 -structure_height *z +
                (base_support_width / 2 - axe_external_diameter / 2) * x
                )
+   dalle(); 
+    
+}
+
+module dalle() {
+    // dalle
+    
     box(size=[base_support_width, base_support_large ,          bottom_support_height], 
         anchor=[0,1,1]);
+    
 }
 
 

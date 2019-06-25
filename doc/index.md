@@ -37,7 +37,7 @@ The module has the following dimensions currently, using a PVC card as reference
 | FLIP-1-3D2       | 1    | Rotor - 1                                   | 2                  | 5€ / per 20 parts  |
 | FLIP-1-3D3       | 1    | Rotor - 2                                   | 2                  | 5€ / per 20 parts  |
 | FLIP-1-3D4       | 1    | Support for sustain the display             | 3                  | 10€ / per 20 parts |
-| FLIP-1-CARDS     | 6    | Flip cards (6 * 2) half cards               | 30 per 500 pieces  |                    |
+| FLIP-1-CARDS     | 6    | Flip cards (6 * 2) half cards               | 30€ per 500 pieces |                    |
 | FLIP-1-MOTOR_CMD | 1    | 28byj-48 - module with command card (LN218) | 4 € each           |                    |
 | FLIP-1-SWITCH    | 1    | Homing switch                               | 2 € each           |                    |
 
@@ -109,7 +109,7 @@ Mount motor on stator :
 
 ![](pictures/skrew_motor.jpg)
 
-
+Switch soldering
 
 ![](pictures/stator_mount.jpg)
 

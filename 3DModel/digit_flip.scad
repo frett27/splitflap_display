@@ -375,7 +375,6 @@ module stator() {
 
 module _fixing_stator_holes() {
     
-      
         // fixing holes, for skrews
         // 1
         translated( - 28byj48_shaft_offset * z
@@ -390,7 +389,6 @@ module _fixing_stator_holes() {
         orient([y])
         rod( d=skrew_hole_size, h=10, $class="hole");
         
-    
 }
 
 module _stator_with_holding_hole() {
@@ -434,7 +432,6 @@ module _stator_with_holding_hole() {
         _fixing_stator_holes();
         
     }
-    
 }
 
 module stator_with_holding_hole() {
@@ -449,9 +446,7 @@ module stator_with_holding_hole() {
             // space for connectors
             switch_space();
         }
-        
     }
-    
     
 }
 
