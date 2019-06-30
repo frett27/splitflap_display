@@ -286,6 +286,9 @@ module dalle() {
 }
 
 
+///////////////////////////////////////////////////////////
+// Assembly
+
 
 module display_modules(number_of_modules = 6, margin = 2) {
 
@@ -303,11 +306,24 @@ module display_modules(number_of_modules = 6, margin = 2) {
             montage_g();
             rotor_g();
             stator_g();
-            
+            front_panels();
             
         }
     }
 
+}
+
+/*
+rotate([-90,0,0]) {
+display_modules();
+}
+*/
+
+module global_support() {
+    difference() {
+             support();
+             ground();
+            }
 }
 
 
@@ -322,16 +338,19 @@ module cut_view() {
     }
 }
 
+/*
+ // best view with stl viewer
+rotate([-90,0,0])
+cut_view();
+*/
+
 
 module exploded_view() {
 
-    difference() {
-         support();
-         ground();
-    }
+    global_support()
 
     translate([0,-50,0])
-    stator_g();
+    stator_motor_g();
 
     translate([0,-120,0])
     rotor_g();
@@ -344,8 +363,7 @@ module exploded_view() {
 
 
 }
-
-
+// axe_with_fix();
 
 //show the contact piece
 /*

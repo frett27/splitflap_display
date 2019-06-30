@@ -1,0 +1,29 @@
+
+#include <SoftwareSerial.h>
+
+// SoftwareSerial downSerial(3, 2); // RX, TX
+
+SoftwareSerial downSerial(0, 1); // RX, TX
+
+ 
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115000);
+   while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  Serial1.begin(9600);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+ Serial.print("A");
+ delay(1000);
+Serial1.println("Hello");
+ 
+    Serial.write(Serial1.read());
+  
+
+
+}

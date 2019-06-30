@@ -873,13 +873,22 @@ module rotor_g() {
 module stator_g() {
      translate([0,28byj48_shaft_height 
                     - 28byj48_shaft_slotted_height / 2,0 ]) { 
+        color("red") {
+            stator_with_holding_hole();
+        }
+    }
+}
+
+module stator_motor_g() {
+     translate([0,28byj48_shaft_height 
+                    - 28byj48_shaft_slotted_height / 2,0 ]) { 
         rotate ([90,0,0]) Stepper28BYJ48();
         color("red") {
             stator_with_holding_hole();
         }
     }
-    
 }
+
 
 module montage_g() {
     color("white") {

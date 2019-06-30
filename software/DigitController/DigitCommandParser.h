@@ -13,7 +13,7 @@
   typedef int (*ReadChar)();
 
   typedef struct {
-       #define COMMAND_SERIAL_BUFFER_SIZE 200
+       #define COMMAND_SERIAL_BUFFER_SIZE 50
        char buffer[COMMAND_SERIAL_BUFFER_SIZE];
       
        int state; // 0 - Wait for start
@@ -36,7 +36,7 @@
    * This function process input characters from readChar function and 
    * translate it into Commands, formatted as described in the reference
    */
-  extern void handleSerialReceive(parser_h parser, ProcessMessage processCommand,
+  extern int handleSerialReceive(parser_h parser, ProcessMessage processCommand,
                                   ReadChar readChar,
                                   MessageCanceled commandCanceled);
 

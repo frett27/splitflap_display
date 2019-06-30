@@ -1,5 +1,6 @@
 
 
+
 // Real Time Kernel
 #include <Arduino_FreeRTOS.h>
 #include "queue.h"
@@ -13,7 +14,11 @@
 // Number of digits depends on the mecanical design
 #define NUMBER_OF_DIGITS 12
 
-#define MAXTOWAIT 1000
+#define MAXTOWAIT 100
+
+#include <SoftwareSerial.h>
+
+
 
 void TaskSerialProtocol(void *parameters);
 
@@ -42,17 +47,26 @@ static int currentStep = -1;
 // total step = -1 -> no homing done yet
 static int totalSteps = -1;
 
+  /*
+  PIN D8 -> RX
+  PIN D9 -> TX
+  */
+SoftwareSerial ds(8, 9); // RX, TX
 
 void setup() {
   
   // initialize serial communication at 9600 bits per second:
   Serial.begin(115200);
 
+  Serial1.begin(9600);
+  ds.begin(9600);
+
+
   /*
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
-  }
-  */
+  }*/
+  
 
   
    // Create the queue, storing the returned handle in the xQueue variable. 
@@ -71,17 +85,9 @@ void setup() {
       Serial.println("Back Queue cannot be created");
   }
 
-
-  // Now set up two tasks to run independently.
-  xTaskCreate(
-    TaskSerialProtocol
-    ,  (const portCHAR *)"Serial"   // A name just for humans
-    ,  512  // This stack size can be checked & adjusted by reading the Stack Highwater
-    ,  NULL
-    ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,  NULL  );
-
-     // Now set up two tasks to run independently.
+  initMotor();
+    
+    // Now set up two tasks to run independently.
   xTaskCreate(
     TaskMotor
     ,  (const portCHAR *)"Motor Report"   // A name just for humans
@@ -90,9 +96,21 @@ void setup() {
     ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     ,  NULL );
 
-   initMotor();
     
-   vTaskStartScheduler();
+  // Now set up two tasks to run independently.
+  xTaskCreate(
+    TaskSerialProtocol
+    ,  (const portCHAR *)"Serial"   // A name just for humans
+    ,  300  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  NULL
+    ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,  NULL  );
+
+
+ 
+//TaskSerialProtocol(NULL);
+ 
+    vTaskStartScheduler();
 }
 
 
@@ -133,13 +151,18 @@ void commandCanceled() {
 }
 
 int readUpStream() {
+  return Serial1.read();
+}
+
+int readUpStream2() {
   return Serial.read();
 }
 
+
 int readDownStream() {
-  // no read
-  return -1;
+  return ds.read();
 }
+
 
 static AMessage bufferMessage;
 void pushMessageToQueue(char* message,QueueHandle_t queue) {
@@ -157,6 +180,11 @@ void pushMessageToQueue(char* message,QueueHandle_t queue) {
 void processBackCommand(const char *command) {
   Serial.print(F("Command from Back Executed :"));
   Serial.println(command);
+
+  // push command to front
+  pushMessageToQueue(command, xFrontSendingQueue);
+ 
+  
 }
 
 void moveTo(uint16_t digit) {
@@ -169,29 +197,36 @@ void processFrontCommand(const char *command) {
   
   Serial.print(F("Command from Front Executed :"));
   Serial.println(command);
+  char message[30];
 
   if (startsWith(command,"MOVE-")) { // use char * to avoid String usage
     int steps = atoi((char *)(command + 5));
     objectifStep = steps;
     // Serial.println(objectifStep);
   } else if (startsWith(command, "HELLO")) {
-    pushMessageToQueue("HELLO",xFrontSendingQueue );
+    pushMessageToQueue("HELLO", xFrontSendingQueue);
   } else if (startsWith(command, "IAM-")) {
     int frontAddress = atoi((char *)(command + 4));
     attributedAddress = frontAddress + 1;
-    char attributionMessage[12];
-    sprintf(attributionMessage, "IAM-%d",attributedAddress);
-    pushMessageToQueue(attributionMessage, xBackSendingQueue );
+    
+    sprintf(message, "IAM-%d",attributedAddress);
+    pushMessageToQueue(message, xBackSendingQueue );
   } else if (startsWith(command, "DIGIT-")) {
     uint16_t digit =atoi((char *)(command + 6));
     moveTo(digit);
   } else if (startsWith(command, "DISPLAY-")) {
+     // char index
      uint8_t offset = 8 + attributedAddress;
      if (offset >= 8) {
        // Serial.println(command[offset]);
        uint16_t digit = command[offset] - '0';
        moveTo(digit);
      }
+
+     sprintf(message, "ACKDISPLAY-%d", attributedAddress);
+     // send ACK
+     pushMessageToQueue(message, xFrontSendingQueue);
+     
   }
   else 
   {
@@ -202,6 +237,9 @@ void processFrontCommand(const char *command) {
 
 // structure used for front parsing
 static parser_t frontParser;
+
+// structure used for front parsing2
+static parser_t frontParser2;
 
 // structure used for back message parsing
 static parser_t backParser;
@@ -214,15 +252,20 @@ static AMessage m;
 void TaskSerialProtocol(void *parameters) {
    
     init(&frontParser);
+    init(&frontParser2);
     init(&backParser);
   
     for(;;) {
+
+       // receive from usb
+      while(handleSerialReceive(&frontParser2, &processFrontCommand, &readUpStream, &commandCanceled) > 0){};
        
        // receive front
-       handleSerialReceive(&frontParser, &processFrontCommand, &readUpStream, &commandCanceled);
-       
+       while (handleSerialReceive(&frontParser, &processFrontCommand, &readUpStream2, &commandCanceled) > 0) {};
+
+        
        // receive back
-       handleSerialReceive(&backParser, &processBackCommand, &readDownStream, &commandCanceled);
+       while (handleSerialReceive(&backParser, &processBackCommand, &readDownStream, &commandCanceled) > 0) {};
 
        // send front messages
         if (uxQueueMessagesWaiting( xFrontSendingQueue ) > 0) {
@@ -230,7 +273,8 @@ void TaskSerialProtocol(void *parameters) {
              if (xQueueReceive(xFrontSendingQueue, &m, ( TickType_t ) 0) == pdPASS) {
              // send message to front
              Serial.print(F("front send message:"));
-             Serial.println(m.ucData);
+             Serial.println(m.ucData); // usb connection
+             Serial1.println(m.ucData); // and front
            }
         }
        
@@ -239,9 +283,12 @@ void TaskSerialProtocol(void *parameters) {
              if (xQueueReceive(xBackSendingQueue, &m, ( TickType_t ) 0) == pdPASS) {
              // send message to back
              Serial.print(F("back send message:"));
-             Serial.println(m.ucData);
+             Serial.print(m.ucData);
+             ds.println(m.ucData);
            }
         }
+
+       vTaskDelay(1);
        
     }
 }
@@ -361,9 +408,11 @@ void TaskMotor(void *parameters) {
   Serial.println(F("Motor initialized"));
   for(;;) {
       vTaskDelay(100);
-       char buffer[40];
+       char buffer[20];
        sprintf(buffer, "%d / %d", currentStep, totalSteps);
       Serial.println(buffer);
+      // downSerial.println("Hello world");
+
      
       //pushMessageToQueue(buffer, xFrontSendingQueue);
   }

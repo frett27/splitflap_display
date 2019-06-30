@@ -38,11 +38,12 @@ At init, the module wants to know if he is the latest one, to determine it's num
 
 Protocol to initialize the module
 
-| Sequence | Message              | Message Orientation | Description                                                  | End of message        |
-| -------- | -------------------- | ------------------- | ------------------------------------------------------------ | --------------------- |
-| 1        | INIT                 | [<-] MODULE         | the module tell it is inited                                 | TimeOut - OR SEQUENCE |
-| 2        | IAM-[NoATTRIBUTED]   | [->] MODULE         | the preceding module inform of its no.                       |                       |
-| 3        | IAM-[NoATTRIBUTED+1] | MODULE [->]         | the module inform the following of his attributed no (address) |                       |
+| Sequence | Message                                      | Message Orientation | Description                                                  | End of message |
+| -------- | -------------------------------------------- | ------------------- | ------------------------------------------------------------ | -------------- |
+| 1        | INIT                                         | [<-] MODULE         | the module tell it is inited                                 | IAM message    |
+| 2        | IAM-[NoATTRIBUTED]                           | [->] MODULE         | the preceding module inform of its no.                       |                |
+| 3        | IAM-[NoATTRIBUTED+1]                         | MODULE [->]         | the module inform the following of his attributed no (address) |                |
+| 4        | CMD-[NoAttributed]-[MessageLength]-[Command] | [->] MODULE         | this command permit to send a specific message to a digit module |                |
 
 
 
@@ -51,7 +52,7 @@ Protocol to initialize the module
 | Sequence | Message           | Message Orientation | Description                                                  | End of message                                               |
 | -------- | ----------------- | ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 1        | DISPLAY-[MESSAGE] | [->] MODULE [->]    | ask to display the message, the module take the [No] digit number. Each Digits are on 2 digits |                                                              |
-| 2        | ACKDISPLAY-[No]   | [<-] MODULE         |                                                              |                                                              |
+| 2        | ACKDISPLAY-[No]   | [<-] MODULE         | Ack about the message                                        |                                                              |
 | 3        | DIGIT-[DIGITNO]   | [->] MODULE         | Ask to display the given digit                               | Display the digit  number (from 0-12). no ack for this operation |
 
 ## Stepper Command (Testing)
@@ -71,6 +72,14 @@ Protocol to initialize the module
 | 1        | HELLO   | [->] MODULE [->]    | Preceding module inform of its status |                |
 |          |         |                     |                                       |                |
 |          |         |                     |                                       |                |
+
+
+
+## Serial Wrap Message
+
+
+
+
 
 
 

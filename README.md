@@ -61,3 +61,6 @@ for more informations, go to **doc/** folder on how to print and build
 - [x] Support Design, to be simple light and permit to add decorations.
 - [ ] Add switch on electronic Card & Pullup
 
+V2.1
+
+- [ ] Testing the Software Serial, apparently an error in choosing the pins 3 is not interrupted changed compatible ->, use 8 or 9

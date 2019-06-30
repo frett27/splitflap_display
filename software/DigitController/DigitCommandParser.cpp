@@ -23,7 +23,7 @@
  * function for handling parser, called periodically to handle characters 
  * and transform them into commands
  */
-  void handleSerialReceive(parser_t *parser, ProcessMessage processCommand,
+  int handleSerialReceive(parser_t *parser, ProcessMessage processCommand,
                            ReadChar readChar,
                            MessageCanceled commandCanceled) {
 
@@ -31,8 +31,10 @@
         int incomingByte = (*readChar)();
         
         if (incomingByte < 0) {
-          return;
+          return 0;
         }
+
+        int retvalue = 1;
         
         switch (parser->state) {
           
@@ -52,7 +54,7 @@
               if (parser->bufferPos >= COMMAND_SERIAL_BUFFER_SIZE || incomingByte == '\n') {
                 parser->bufferPos = 0;
                 parser->state = 0;
-                return;
+                return retvalue;
               }
       
               parser->buffer[parser->bufferPos++] = (char)incomingByte;
@@ -68,7 +70,7 @@
                     // Serial.println("move to 0");
                  
                     parser->bufferPos = 0;
-                    return;
+                    return retvalue;
                   }
                   // Serial.println("move to 2");
                   parser->state = 2;
@@ -83,7 +85,7 @@
                   parser->state = 0;
                   parser->bufferPos = 0;
                   commandCanceled();
-                  return;
+                  return retvalue;
                }
                
               parser->buffer[parser->bufferPos++] = (char)incomingByte;
@@ -108,9 +110,6 @@
              break;          
         } // switch
 
+        return retvalue;
 
 }
-
-
-
-
