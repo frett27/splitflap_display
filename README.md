@@ -1,6 +1,6 @@
 # Flip flap Display
 
-*Patrice Freydiere - Avril 2019*
+*Patrice Freydiere - Avril/Septembre 2019*
 
 This repository contains the technical elements to create a flip flap display module, This display can be used for a physical web counter, a clock, letter display.
 
@@ -65,7 +65,7 @@ integrating the upstream serial and downstream serial, works both.
 
 #### **V4 - Electronic change**
 
-
+Fix a pin placement issue
 
 
 

@@ -62,9 +62,9 @@ on the other side / symetric
 
 
 
-### The electronic software :
+### The electronic software logic:
 
-at reset we send a transmission to count the number of digits, when done
+At reset we send a transmission to count the number of digits, when done
 
 this read the motor situation (in eeprom)
 

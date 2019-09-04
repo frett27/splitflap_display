@@ -14,6 +14,7 @@
 // Number of digits depends on the mecanical design
 #define NUMBER_OF_DIGITS 12
 
+// Time to wait on the message queue
 #define MAXTOWAIT 100
 
 #include <SoftwareSerial.h>
@@ -80,7 +81,6 @@ void writeOffsetValue(int valueToWrite) {
   EEPROM.write(EEPROM_OFFSET_STORAGE_ADDRESS, EEPROM_OFFSET_STORAGE_MAGIX_HEADER);
   EEPROM.write(EEPROM_OFFSET_STORAGE_ADDRESS + 1, b1);
   EEPROM.write(EEPROM_OFFSET_STORAGE_ADDRESS + 2, b2);
-  
 }
 
 
@@ -89,9 +89,10 @@ void setup() {
 
   offsetStep = readOffsetValue();
   
-  // initialize serial communication at 9600 bits per second:
+  // initialize serial communication at 115200 bits per second for main serial
   Serial.begin(115200);
 
+  // init back and front serial to 9600 bauds
   Serial1.begin(9600);
   ds.begin(9600);
   
@@ -241,21 +242,24 @@ void processFrontCommand(const char *command) {
     // Receive the number from 
     int frontAddress = atoi((char *)(command + 4));
     attributedAddress = frontAddress + 1;
+    // send the same message to the other following ones
     sprintf(message, "IAM-%d",attributedAddress);
     pushMessageToQueue(message, xBackSendingQueue );
     
   } else if (startsWith(command, "OFFSET-")) { 
-    
+    // define the offset of the digit (from the homing button)
     int offset = atoi((char *)(command + 7));
     writeOffsetValue(offset);
   
   } else if (startsWith(command, "DIGIT-")) {
-    
+    // command to directly send a digit display
     uint16_t digit =atoi((char *)(command + 6));
     moveTo(digit);
     
   } else if (startsWith(command, "DISPLAY-")) {
-    
+     // from the current address position, 
+     // grab the display character and apply it
+     
      // char index
      uint8_t offset = 8 + attributedAddress;
      if (offset >= 8) {
@@ -300,18 +304,16 @@ void TaskSerialProtocol(void *parameters) {
     for(;;) {
 
        // receive from usb
-      while(handleSerialReceive(&frontParser2, &processFrontCommand, &readUpStream, &commandCanceled) > 0){};
+       while(handleSerialReceive(&frontParser2, &processFrontCommand, &readUpStream, &commandCanceled) > 0){};
        
        // receive front
        while (handleSerialReceive(&frontParser, &processFrontCommand, &readUpStream2, &commandCanceled) > 0) {};
 
-        
        // receive back
        while (handleSerialReceive(&backParser, &processBackCommand, &readDownStream, &commandCanceled) > 0) {};
 
        // send front messages
         if (uxQueueMessagesWaiting( xFrontSendingQueue ) > 0) {
-            
              if (xQueueReceive(xFrontSendingQueue, &m, ( TickType_t ) 0) == pdPASS) {
              // send message to front
              Serial.print(F("front send message:"));
