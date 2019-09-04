@@ -70,8 +70,8 @@ general_rotation_angle = 0;
 // uncomment this for generating STL,
 //
 
-// $fa = 1;
-// $fs=0.3;
+ $fa = 1;
+ $fs=0.3;
 
 
 module flip(width=flip_width) {
@@ -818,27 +818,43 @@ module __multiple_flip_supports() {
     
     support_height = 0.2;
     
+    /*
     translate([support_flip_support_height/2 - deport,          
                 support_flip_height - support_height,1])
                 cube(size=[2,support_height,3]);
-                
+*/
+    /*
     for (i = [-support_flip_support_height + deport:
                 support_flip_support_height/2 - deport: 
                    7]) {
                 translate([i,support_flip_height - support_height,1])
                 cube(size=[1,support_height,3]);
     }
+    */
     
-    // long fix
-                translate([-support_flip_support_height ,support_flip_height - support_height,2])
-                cube(size=[2*support_flip_support_height - deport, support_height,1]);
+    // long fix along the fix
+                translate([-support_flip_support_height 
+                        ,support_flip_height - support_height
+                        ,flip_thick/2])
+                cube(size=[2*support_flip_support_height - deport, support_height,support_flip_height/2 - flip_thick/2]);
+    // long fix other side
+       mirror([0,0,1])
+       translate([-support_flip_support_height 
+                        ,support_flip_height - support_height
+                        ,flip_thick/2])
+                cube(size=[2*support_flip_support_height - deport, support_height,support_flip_height/2 - flip_thick/2]);
+    
+    
+    
+    
                 // long fix relation
-                translate([-support_flip_support_height ,support_flip_height - support_height,0])
-                cube(size=[2,support_height,5]);
-    translate([support_flip_support_height - deport ,support_flip_height - support_height,0])
-                cube(size=[2,support_height,5]);
+                translate([-support_flip_support_height ,support_flip_height - support_height,-10/2])
+                cube(size=[2,support_height,10]);
+    translate([support_flip_support_height - deport ,support_flip_height - support_height,-10/2])
+                cube(size=[2,support_height,10]);
     
 }
+
 
 module multiple_support_flip(flips_numbers = flips_numbers * 2) {
     for (i = [0: flips_numbers]) {
@@ -848,8 +864,8 @@ module multiple_support_flip(flips_numbers = flips_numbers * 2) {
         union() {
             __multiple_flip_supports();
              mirror([0,0,1]) {
-            // fix element between them
-            __multiple_flip_supports();  
+                // fix element between them
+                __multiple_flip_supports();  
             }
             support_flip();
             
@@ -858,7 +874,7 @@ module multiple_support_flip(flips_numbers = flips_numbers * 2) {
 
 }
 // support_flip();
- //multiple_support_flip();
+ multiple_support_flip();
 
 
 /////////////////////////////////////////////////////

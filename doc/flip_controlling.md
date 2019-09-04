@@ -75,12 +75,6 @@ Protocol to initialize the module
 
 
 
-## Serial Wrap Message
-
-
-
-
-
 
 
 ## Error Handling

@@ -1,9 +1,9 @@
 
-
-
 // Real Time Kernel
 #include <Arduino_FreeRTOS.h>
 #include "queue.h"
+
+#include <EEPROM.h>
 
 // Library for controling the stepper
 #include "CheapStepper.h"
@@ -47,27 +47,57 @@ static int currentStep = -1;
 // total step = -1 -> no homing done yet
 static int totalSteps = -1;
 
+// programmable offset
+static int offsetStep = 0;
+
+#define EEPROM_OFFSET_STORAGE_ADDRESS 0
+#define EEPROM_OFFSET_STORAGE_MAGIX_HEADER 0xCC
+
+
   /*
   PIN D8 -> RX
   PIN D9 -> TX
   */
 SoftwareSerial ds(8, 9); // RX, TX
 
+int readOffsetValue() {
+  byte v1 = EEPROM.read(EEPROM_OFFSET_STORAGE_ADDRESS);
+  if (v1 != EEPROM_OFFSET_STORAGE_MAGIX_HEADER) {
+    // no magic at start, no value read
+    return 0; 
+  }
+
+  byte b1 = EEPROM.read(EEPROM_OFFSET_STORAGE_ADDRESS + 1);
+  byte b2 = EEPROM.read(EEPROM_OFFSET_STORAGE_ADDRESS + 2);
+ 
+  return b1 + (b2 << 8) - 2^15;
+}
+
+void writeOffsetValue(int valueToWrite) {
+  uint16_t v = valueToWrite + 2^15;
+  byte b1 = v & 0xFF;
+  byte b2 = (v >> 8) & 0xFF;
+  EEPROM.write(EEPROM_OFFSET_STORAGE_ADDRESS, EEPROM_OFFSET_STORAGE_MAGIX_HEADER);
+  EEPROM.write(EEPROM_OFFSET_STORAGE_ADDRESS + 1, b1);
+  EEPROM.write(EEPROM_OFFSET_STORAGE_ADDRESS + 2, b2);
+  
+}
+
+
+
 void setup() {
+
+  offsetStep = readOffsetValue();
   
   // initialize serial communication at 9600 bits per second:
   Serial.begin(115200);
 
   Serial1.begin(9600);
   ds.begin(9600);
-
-
-  /*
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
-  }*/
   
-
+ // while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
+ // }
   
    // Create the queue, storing the returned handle in the xQueue variable. 
   xFrontSendingQueue = xQueueCreate( QUEUE_LENGTH, QUEUE_ITEM_SIZE );
@@ -85,8 +115,7 @@ void setup() {
       Serial.println("Back Queue cannot be created");
   }
 
-  initMotor();
-    
+   
     // Now set up two tasks to run independently.
   xTaskCreate(
     TaskMotor
@@ -106,11 +135,10 @@ void setup() {
     ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     ,  NULL  );
 
-
+  initMotor();
+  
  
-//TaskSerialProtocol(NULL);
- 
-    vTaskStartScheduler();
+  vTaskStartScheduler();
 }
 
 
@@ -176,21 +204,19 @@ void pushMessageToQueue(char* message,QueueHandle_t queue) {
   }  
 }
 
+void moveTo(uint16_t digit) {
+  uint16_t stepsInterval = totalSteps / NUMBER_OF_DIGITS;
+  uint16_t s =  digit * totalSteps / NUMBER_OF_DIGITS + stepsInterval * 3 / 4;
+  objectifStep += (offsetStep + totalStep); // offsetStep may be negative
+  objectifStep = s % totalSteps;
+}
 
 void processBackCommand(const char *command) {
   Serial.print(F("Command from Back Executed :"));
   Serial.println(command);
 
   // push command to front
-  pushMessageToQueue(command, xFrontSendingQueue);
- 
-  
-}
-
-void moveTo(uint16_t digit) {
-  uint16_t stepsInterval = totalSteps / NUMBER_OF_DIGITS;
-  uint16_t s =  digit * totalSteps / NUMBER_OF_DIGITS + stepsInterval * 3 / 4 ;
-  objectifStep = s % totalSteps;
+  pushMessageToQueue(command, xFrontSendingQueue);  
 }
 
 void processFrontCommand(const char *command) {
@@ -200,21 +226,36 @@ void processFrontCommand(const char *command) {
   char message[30];
 
   if (startsWith(command,"MOVE-")) { // use char * to avoid String usage
+    
     int steps = atoi((char *)(command + 5));
     objectifStep = steps;
     // Serial.println(objectifStep);
+    
   } else if (startsWith(command, "HELLO")) {
+    
+    // respond
     pushMessageToQueue("HELLO", xFrontSendingQueue);
+    
   } else if (startsWith(command, "IAM-")) {
+    
+    // Receive the number from 
     int frontAddress = atoi((char *)(command + 4));
     attributedAddress = frontAddress + 1;
-    
     sprintf(message, "IAM-%d",attributedAddress);
     pushMessageToQueue(message, xBackSendingQueue );
+    
+  } else if (startsWith(command, "OFFSET-")) { 
+    
+    int offset = atoi((char *)(command + 7));
+    writeOffsetValue(offset);
+  
   } else if (startsWith(command, "DIGIT-")) {
+    
     uint16_t digit =atoi((char *)(command + 6));
     moveTo(digit);
+    
   } else if (startsWith(command, "DISPLAY-")) {
+    
      // char index
      uint8_t offset = 8 + attributedAddress;
      if (offset >= 8) {
@@ -224,6 +265,7 @@ void processFrontCommand(const char *command) {
      }
 
      sprintf(message, "ACKDISPLAY-%d", attributedAddress);
+     
      // send ACK
      pushMessageToQueue(message, xFrontSendingQueue);
      
@@ -329,7 +371,7 @@ void initMotor() {
     TCCR1A = 0;     // set entire TCCR1A register to 0
     TCCR1B = 0;     // same for TCCR1B
     // set compare match register to desired timer count
-    // 13 -> too fast
+    // 13 -> too fast for BYMOTORS
     OCR1A = 20;
     // turn on CTC mode:
     TCCR1B |= (1 << WGM12);
@@ -397,24 +439,17 @@ ISR(TIMER1_COMPA_vect) {
               }
                isIn = false;
             } 
-
     }
 }
-
-
 
 void TaskMotor(void *parameters) {
   
   Serial.println(F("Motor initialized"));
   for(;;) {
       vTaskDelay(100);
-       char buffer[20];
-       sprintf(buffer, "%d / %d", currentStep, totalSteps);
+      char buffer[20];
+      sprintf(buffer, "%d / %d", currentStep, totalSteps);
       Serial.println(buffer);
-      // downSerial.println("Hello world");
-
-     
-      //pushMessageToQueue(buffer, xFrontSendingQueue);
   }
 }
 
