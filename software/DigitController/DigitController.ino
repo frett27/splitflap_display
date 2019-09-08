@@ -13,6 +13,7 @@
 
 // Number of digits depends on the mecanical design
 #define NUMBER_OF_DIGITS 12
+#define MESSAGE_MAX_SIZE 30
 
 // Time to wait on the message queue
 #define MAXTOWAIT 100
@@ -27,7 +28,7 @@ void TaskSerialProtocol(void *parameters);
 /* Define the data type that will be queued. */
 typedef struct A_Message
 {
- char ucData[ 30 ];
+ char ucData[ MESSAGE_MAX_SIZE ];
 } AMessage;
 
 /* Define the queue parameters. */
@@ -91,6 +92,7 @@ void setup() {
   
   // initialize serial communication at 115200 bits per second for main serial
   Serial.begin(115200);
+  Serial.print(offsetStep);
 
   // init back and front serial to 9600 bauds
   Serial1.begin(9600);
@@ -207,9 +209,8 @@ void pushMessageToQueue(char* message,QueueHandle_t queue) {
 
 void moveTo(uint16_t digit) {
   uint16_t stepsInterval = totalSteps / NUMBER_OF_DIGITS;
-  uint16_t s =  digit * totalSteps / NUMBER_OF_DIGITS + stepsInterval * 3 / 4;
-  objectifStep += (offsetStep + totalStep); // offsetStep may be negative
-  objectifStep = s % totalSteps;
+  uint16_t s =  (digit * totalSteps / NUMBER_OF_DIGITS + stepsInterval * 3 / 4 + offsetStep) % totalSteps;
+  objectifStep = s;
 }
 
 void processBackCommand(const char *command) {
@@ -224,7 +225,7 @@ void processFrontCommand(const char *command) {
   
   Serial.print(F("Command from Front Executed :"));
   Serial.println(command);
-  char message[30];
+  char message[MESSAGE_MAX_SIZE];
 
   if (startsWith(command,"MOVE-")) { // use char * to avoid String usage
     
@@ -249,7 +250,9 @@ void processFrontCommand(const char *command) {
   } else if (startsWith(command, "OFFSET-")) { 
     // define the offset of the digit (from the homing button)
     int offset = atoi((char *)(command + 7));
+    offsetStep = offset;
     writeOffsetValue(offset);
+    Serial.println(offsetStep);
   
   } else if (startsWith(command, "DIGIT-")) {
     // command to directly send a digit display
@@ -259,7 +262,11 @@ void processFrontCommand(const char *command) {
   } else if (startsWith(command, "DISPLAY-")) {
      // from the current address position, 
      // grab the display character and apply it
-     
+
+     // forward the message to back
+     pushMessageToQueue(command, xBackSendingQueue);
+
+     // handle it's owwn digit
      // char index
      uint8_t offset = 8 + attributedAddress;
      if (offset >= 8) {
@@ -273,6 +280,24 @@ void processFrontCommand(const char *command) {
      // send ACK
      pushMessageToQueue(message, xFrontSendingQueue);
      
+  } 
+  else if (startsWith(command, "CMD-")) {
+      // format of the message is
+      //XXXCMD-NNN-XXXHELLO
+      char read_address[5];
+      strncpy(read_address, (char *)(command + 4), 3);
+      read_address[3] = '\n';
+      uint16_t address = atoi(read_address);
+      char * inner_command_pointer = (char *)(command + 4 + 3 /* digits number for inner command */ + 1 /* separator */);
+      if (address == attributedAddress) {
+        // this command is for this module, 
+        // handle it
+        processFrontCommand(inner_command_pointer);
+      } else {
+        // forward to back
+        pushMessageToQueue(inner_command_pointer, xBackSendingQueue );
+      }
+      
   }
   else 
   {
