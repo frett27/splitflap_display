@@ -1,0 +1,50 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=electronic_v3
+*Date=16:30:38
+*CreatedBy=Fritzing 0.9.2b.11.19.8d2d5970658f0bed09c661c9ea9a515b5f40f44c
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;36.363;-2.74234;90;Bottom;TXT3
+2;220;THT;20.7815;-26.6781;0;Bottom;R4
+3;;THT;35.7038;-42.731;90;Bottom;In Connector
+4;;THT;35.2619;-5.83768;90;Bottom;Out Connector
+5;;;31.2002;-3.06507;90;Bottom;TXT3
+6;;;8.02289;-33.0397;0;Bottom;TXT3
+7;;;8.06181;-30.4316;0;Bottom;TXT3
+8;;;31.8199;-41.0725;90;Bottom;TXT3
+9;;;17.9832;-41.3643;0;Bottom;Via2
+10;;;41.4223;-2.79379;90;Bottom;TXT3
+11;;;47.0948;-3.77611;0;Bottom;Hole1
+12;;;41.9968;-40.6787;90;Bottom;TXT3
+13;;;34.226;-40.9499;90;Bottom;TXT3
+14;;THT;11.3984;-42.7993;90;Bottom;Homing
+15;;;25.7204;-10.8755;0;Bottom;TXT1
+16;;;17.3736;-44.4123;0;Bottom;Via1
+17;;;3.71208;-43.6241;0;Bottom;Hole4
+18;;;33.9547;-2.92961;90;Bottom;TXT3
+19;;THT;3.80977;-12.2156;0;Bottom;Motor Power
+20;;;28.5661;-3.01327;90;Bottom;TXT3
+21;;;29.1406;-40.8981;90;Bottom;TXT3
+22;;;47.4614;-43.7316;0;Bottom;Hole3
+23;;;7.49799;-14.8946;90;Bottom;TXT3
+24;220;THT;38.4222;-22.3355;180;Bottom;R3
+25;;;36.9375;-40.6272;90;Bottom;TXT3
+26;;;4.24845;-3.81223;0;Bottom;Hole2
+27;;;39.4963;-40.8145;90;Bottom;TXT3
+28;;;32.7933;-23.6268;90;Bottom;Pro Micro1
+29;;;38.9218;-2.92961;90;Bottom;TXT3
+30;;;8.17859;-27.7456;0;Bottom;TXT3
+31;;;7.42012;-18.0088;90;Bottom;TXT3
+32;;;14.5797;-1.36796;0;Bottom;TXT1
+33;;;7.94503;-35.6868;0;Bottom;TXT3
+34;;THT;3.94431;-31.8263;0;Bottom;Motor
+35;220;THT;20.4732;-37.8894;180;Bottom;R1

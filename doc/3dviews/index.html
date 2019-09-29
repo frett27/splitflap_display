@@ -1,0 +1,30 @@
+<html>
+<head>
+<script src="stl_viewer.min.js"></script>
+<style>
+
+div#stl
+{
+    width:500px;
+    height:600px;
+
+}
+</style>
+</head>
+<body>
+
+<div id="stl">
+</div>
+
+
+<script language="javascript">
+    var stl_viewer = new StlViewer(document.getElementById("stl"),
+         { 
+             models: [
+                        {id:0, filename:"view_2_modules_with_cut_r.stl" } 
+                        ]
+         });
+</script>
+</body>
+
+</html>
