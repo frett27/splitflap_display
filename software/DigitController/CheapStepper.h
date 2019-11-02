@@ -59,6 +59,8 @@ public:
 	}
 	int getStepsLeft() { return stepsLeft; } // returns steps left in current move
 
+  void stopCurrent();
+
 private:
 
 

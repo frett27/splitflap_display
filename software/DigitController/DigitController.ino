@@ -421,6 +421,9 @@ static int nbIn = 0;
 const int T_THRESHOLD = 100;
 
 ISR(TIMER1_COMPA_vect) {
+
+    // totalSteps < 4060 means the homing
+    // has not been done yet
     
     if (totalSteps < 4060 || 
           (objectifStep != currentStep && objectifStep > 0) ) {
@@ -428,8 +431,11 @@ ISR(TIMER1_COMPA_vect) {
           cs.move(true,1);
           if (currentStep >=0) {
             currentStep ++;
+              if (currentStep == objectifStep) {
+                cs.stopCurrent();
+              }
           }
-          
+
             // watch the homing state
         
             int value = analogRead(SWITCH);
@@ -466,7 +472,7 @@ ISR(TIMER1_COMPA_vect) {
               }
                isIn = false;
             } 
-    }
+    } // if (homing or target)
 }
 
 void TaskMotor(void *parameters) {

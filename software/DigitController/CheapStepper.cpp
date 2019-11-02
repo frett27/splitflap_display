@@ -56,6 +56,10 @@ void CheapStepper::step(bool clockwise){
 	else seqCCW();
 }
 
+void CheapStepper::stopCurrent() {
+  seq(8);
+}
+
 
 /////////////
 // PRIVATE //
@@ -170,5 +174,3 @@ void CheapStepper::seq (int seqNum){
 		digitalWrite(pins[p], pattern[p]);
 	}
 }
-
-
