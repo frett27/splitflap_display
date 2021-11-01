@@ -1,4 +1,4 @@
-# Flip flap Display
+# Split Flap Display
 
 *Patrice Freydiere - Avril/Septembre 2019*
 
